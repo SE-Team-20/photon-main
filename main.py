@@ -6,6 +6,10 @@ from PyQt6.QtCore import Qt, QSize, QTimer
 from PyQt6.QtGui import QPixmap, QGuiApplication
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QSplashScreen
 
+
+# TODO:
+# 1. use QSlpashScren and implement a transient from that to the main screen
+# 2. figure out the widget necessity and design the UI
 class MainWindow(QMainWindow):
   def __init__(self):
     super().__init__()
