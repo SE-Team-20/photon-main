@@ -9,6 +9,7 @@
 - [ ] have option to select different network for UDP sockets
 - [ ] include an install script to the repository
 - [ ] modify this readme to include the install instruction
+- [ ] enhance README
 
 
 
