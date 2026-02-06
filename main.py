@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
                 row_data.append(entry)
             row_btn = QPushButton("⏎")
             row_btn.setFixedSize(30, 20)
-            row_btn.setStyleSheet("font-size: 10px; background-color: #FFFFF;")
+            row_btn.setStyleSheet("font-size: 10px; background-color: #FFFFFF;")
             row_btn.clicked.connect(
                 lambda checked, r=row_data, t=team_name: self.on_row_submit(r, t)
             )
