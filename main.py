@@ -5,15 +5,12 @@ from PyQt6.QtGui import QPixmap, QGuiApplication, QPainter, QBrush, QColor
 from PyQt6.QtCore import Qt, QTimer, QSize
 # Above are all helper classes needed from PyQt6 for this project, so far.
 class MainWindow(QMainWindow):
-    # Prototype MainWindow class to test PyQt6 GUI viability.
     def __init__(self):
         super().__init__()
         #Create GUI
         self.setWindowTitle("Player Entry Terminal Screen")
         self.setGeometry(400, 150, 1050, 800)
-        # Main Layout
         main_layout = QVBoxLayout()
-        # Entries layout
         entry_layout = QHBoxLayout()
 
         self.red_panel = RedTeamPanel()
@@ -30,8 +27,9 @@ class MainWindow(QMainWindow):
         green_label = QLabel("GREEN TEAM")
         green_label.setStyleSheet("color: green; font-weight: bold; font-size: 18px;")
         green_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        green_entry_box.addWidget(green_label)
 
+
+        green_entry_box.addWidget(green_label)
         entry_layout.addWidget(red_label)
         entry_layout.addWidget(green_label)
         main_layout.addLayout(entry_layout)
@@ -78,6 +76,9 @@ class MainWindow(QMainWindow):
             row_btn.setFixedSize(30, 20)
             row_btn.setStyleSheet("font-size: 10px; background-color: #FFFFF;")
             row_btn.clicked.connect(lambda checked, r=row_data, t=team_name: self.on_row_submit(r, t))
+            # The code above creates an anonymous function that creates anonymous variables to quickly grab the row
+            # that was clicked and the team name of that grid. This then is passed to our MainWindow function
+            # on_row_submit that takes the row and team name, this will then allow precise parsing on submission.
 
             player_entry_grid.addWidget(row_btn, row, 2)
             entries.append(row_data)
@@ -107,7 +108,7 @@ class RedTeamPanel(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         # Draw a dark red rectangle that fills this specific widget.
-        painter.setBrush(QBrush(QColor(150, 0, 0)))
+        painter.setBrush(QBrush(QColor(100, 0, 0)))
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRect(self.rect())
 
