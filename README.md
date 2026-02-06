@@ -1,9 +1,24 @@
-# Photon-main
+# Photon main (team 20)
+[quick link to the main branch](https://github.com/SE-Team-20/photon-main/tree/main)
 
-## About this repository
-- assets: includes images and sounds used in an app
-- src: includes execution files
-- doc: includes readme's for notes
+## File organization strategy
+
+<table>
+<thread>
+ <tr>
+  <th>folder</th><th>includes</th>
+ </tr>
+</thread>
+<tr>
+ <td>asset</td><td>images and sound used in App</td>
+</tr>
+<tr>
+ <td>doc</td><td>documentations and references</td>
+</tr>
+<tr>
+ <td>src</td><td>source files(.py, .sql)</td>
+</tr>
+</table>
 
 ## TODOs (week 2)
 by February 10th
