@@ -27,6 +27,40 @@ LOGO = IMAGES_DIR / "logo.jpg"
 # BUTTON_START = IMAGES_DIR / "btn_start.png"
 # BUTTON_STOP = IMAGES_DIR / "btn_stop.png"
 
+
+# =========================================================
+# Network
+# =========================================================
+
+LOCALHOST_ID = "127.0.0.1"
+SOCKET_BROADCAST = "7500"
+SOCKET_RECEIVE = "7501"
+
+# as requirement says: "Include functionality to be able to change network address"
+def get_networkID():
+  return LOCALHOST_ID
+def set_networkID(value: str):
+  global LOCALHOST_ID
+  LOCALHOST_ID=value
+
+CODE_GAMESTART = "202"
+CODE_GAMEEND = "221"
+
+CODE_BASESCORE_RED = "53"
+CODE_BASESCORE_GREEN = "43"
+
+# =========================================================
+# Gameplay
+# =========================================================
+
+MAX_NUM_PLAYER = 15
+
+SCORE_BASE = 100
+PENALTY_BASE = 0
+
+SCORE_TAKEDOWN = 10
+PENALTY_TAKEDOWN = -10
+
 # =========================================================
 # Colors (Hex / RGB)
 # =========================================================
