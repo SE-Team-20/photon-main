@@ -3,8 +3,8 @@ from psycopg2 import sql
 
 # Define connection parameters
 connection_params = {
-    'dbname': 'photon',
-    'user': 'student',
+    "dbname": "photon",
+    "user": "student",
     #'password': 'student',
     #'host': 'localhost',
     #'port': '5432'
@@ -23,7 +23,7 @@ try:
     print(f"Connected to - {version}")
 
     # Example: creating a table
-    #cursor.execute('''
+    # cursor.execute('''
     #    CREATE TABLE IF NOT EXISTS employees (
     #        id SERIAL PRIMARY KEY,
     #        name VARCHAR(100),
@@ -33,10 +33,13 @@ try:
     #''')
 
     # Insert sample data
-    cursor.execute('''
+    cursor.execute(
+        """
         INSERT INTO players (id, codename)
         VALUES (%s, %s);
-    ''', ('500', 'BhodiLi'))
+    """,
+        ("500", "BhodiLi"),
+    )
 
     # Commit the changes
     conn.commit()
