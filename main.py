@@ -13,6 +13,9 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPixmap, QGuiApplication, QPainter, QBrush, QColor
 from PyQt6.QtCore import Qt, QTimer, QSize
+from constants import (
+    LOGO
+)
 
 
 # Above are all helper classes needed from PyQt6 for this project, so far.
@@ -155,7 +158,7 @@ def main():
     app = QApplication(sys.argv)
     screen_size = QGuiApplication.primaryScreen().size() / 2
     # set application to scale according to user screen size
-    pixmap = QPixmap("logo.jpg").scaled(QSize(screen_size))
+    pixmap = QPixmap(f"{LOGO}").scaled(QSize(screen_size))
     splash = QSplashScreen(pixmap, Qt.WindowType.WindowStaysOnTopHint)
     # Ensure window splashes on top of all other applications on start up
     splash.show()
