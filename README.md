@@ -2,7 +2,7 @@
 
 ## TODOs (week 2)
 by February 10th
-- [ ] create splash screen
+- [x] create splash screen (Thomas)
 - [ ] create player entry screen
 - [ ] link database to application
 - [ ] add two players via application
@@ -14,7 +14,6 @@ by 15th
 - [ ] include an install script to the repository
 - [ ] modify this readme to include the install instruction
 - [ ] enhance README
-
 
 
 
