@@ -7,8 +7,8 @@ from pathlib import Path
 # Base Paths
 # =========================================================
 
-# Project root (constants.py の位置基準)
-BASE_DIR = Path(__file__).resolve().parent
+# Project root
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Assets
 ASSETS_DIR = BASE_DIR / "assets"

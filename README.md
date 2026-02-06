@@ -1,9 +1,14 @@
 # Photon-main
 
+## About this repository
+- assets: includes images and sounds used in an app
+- src: includes execution files
+- doc: includes readme's for notes
+
 ## TODOs (week 2)
 by February 10th
 - [x] create splash screen (Thomas)
-- [ ] create player entry screen
+- [ ] create player entry screen (Thomas)
 - [ ] link database to application (RyoB)
 - [ ] add two players via application
 - [ ] set up UDP sockets, broadcast equipment codes
