@@ -4,7 +4,7 @@
 by February 10th
 - [x] create splash screen (Thomas)
 - [ ] create player entry screen
-- [ ] link database to application
+- [ ] link database to application (RyoB)
 - [ ] add two players via application
 - [ ] set up UDP sockets, broadcast equipment codes
 - [ ] have option to select different network for UDP sockets
