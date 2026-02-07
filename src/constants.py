@@ -50,10 +50,26 @@ CODE_BASESCORE_RED = "53"
 CODE_BASESCORE_GREEN = "43"
 
 # =========================================================
+# Database
+# =========================================================
+
+DB_NAME = "photon"
+DB_USERNAME = "student"
+DB_PASSWORD = "password"
+DB_HOST = "host"
+DB_PORT = "5432"
+
+DB_TABLE_PLAYERS ="players"
+DB_TABLE_EQUIPS = "equipments"
+
+
+
+# =========================================================
 # Gameplay
 # =========================================================
 
 MAX_NUM_PLAYER = 15
+NUM_TEAM = 2
 
 SCORE_BASE = 100
 PENALTY_BASE = 0
