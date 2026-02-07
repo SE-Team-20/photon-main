@@ -16,6 +16,8 @@ from constants import (
   NUM_TEAM
 )
 
+# TODO: read this
+# https://www.geeksforgeeks.org/postgresql/postgresql-connecting-to-the-database-using-python/
 class DB:
   # TODO: return false if failed to connect to the database
   # TODO: check if the method should self.conn.commit() every time
