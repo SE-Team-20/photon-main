@@ -17,7 +17,8 @@ from constants import (
 )
 
 class DB:
-  # TODO: return false if failed to make one
+  # TODO: return false if failed to connect to the database
+  # TODO: check if the method should self.conn.commit() every time
   def __init__(self):
     self.conn = psycopg2.connect(**connection_params)
     self.cur = self.conn.cursor()
@@ -89,6 +90,17 @@ class DB:
   # TODO: Update score (change, playerID, teamID)
 
   # TODO: Get ranking (teamID)
+  # cur.fetchall() returns an array of data concatenated as a string
+
+  # TODO: Get player ID (equipID)
+
+  # TODO: Get team ID (equipID)
+
+  # TODO: Get team ID (playerID, teamID)
+
+  # TODO: Assign equipment
+
+  # TODO: Collect equipment
   
 
 connection_params = {
@@ -98,17 +110,3 @@ connection_params = {
   'host': f"{DB_HOST}",
   'port': f"{DB_PORT}",
 }
-
-# wrapper/validator (do we need it?????)
-def run_query(sql_text, params=None, fetch=False):
-  with psycopg2.connect(**connection_params) as conn:
-     with conn.cursor() as cur:
-        cur.execute(sql_text, params)
-        if fetch:
-           return cur.fetchall()
-
-# hints
-  # conn.commit()
-  # rows = cursor.fetchall()
-  # for row in rows:
-  #   print(row)
