@@ -1,28 +1,26 @@
 import psycopg2
 from psycopg2 import sql
 from util import (
-  validIndex
+  validIndex,
+  readConfig,
 )
 
 from constants import (
-  DB_NAME,
-  DB_USERNAME,
-  DB_PASSWORD,
-  DB_HOST,
-  DB_PORT,
+  DBINIT_PATH,
+  DBINIT_SEC,
   DB_TABLE_PLAYERS,
   DB_TABLE_EQUIPS,
   MAX_NUM_PLAYER,
   NUM_TEAM
 )
 
-# TODO: read this
-# https://www.geeksforgeeks.org/postgresql/postgresql-connecting-to-the-database-using-python/
+from configparser import ConfigParser
+
 class DB:
   # TODO: return false if failed to connect to the database
   # TODO: check if the method should self.conn.commit() every time
   def __init__(self):
-    self.conn = psycopg2.connect(**connection_params)
+    self.conn = psycopg2.connect(**readConfig(DBINIT_PATH, DBINIT_SEC))
     self.cur = self.conn.cursor()
     self.create_tables()
   
@@ -103,12 +101,3 @@ class DB:
   # TODO: Assign equipment
 
   # TODO: Collect equipment
-  
-
-connection_params = {
-  "dbname": f"{DB_NAME}",
-  "user": f"{DB_USERNAME}",
-  'password': f"{DB_PASSWORD}",
-  'host': f"{DB_HOST}",
-  'port': f"{DB_PORT}",
-}

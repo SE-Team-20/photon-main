@@ -14,6 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ASSETS_DIR = BASE_DIR / "assets"
 IMAGES_DIR = ASSETS_DIR / "images"
 SFX_DIR = ASSETS_DIR / "sound"
+CONFIG_DIR = BASE_DIR / "config"
 
 # =========================================================
 # Image File Paths
@@ -26,6 +27,9 @@ LOGO = IMAGES_DIR / "logo.jpg"
 # Example UI images
 # BUTTON_START = IMAGES_DIR / "btn_start.png"
 # BUTTON_STOP = IMAGES_DIR / "btn_stop.png"
+
+DBINIT_PATH = CONFIG_DIR / "database.init"
+DBINIT_SEC = "postgresql"
 
 
 # =========================================================
@@ -53,15 +57,8 @@ CODE_BASESCORE_GREEN = "43"
 # Database
 # =========================================================
 
-DB_NAME = "photon"
-DB_USERNAME = "student"
-DB_PASSWORD = "password"
-DB_HOST = "host"
-DB_PORT = "5432"
-
 DB_TABLE_PLAYERS ="players"
 DB_TABLE_EQUIPS = "equipments"
-
 
 
 # =========================================================

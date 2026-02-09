@@ -10,13 +10,16 @@
  </tr>
 </thread>
 <tr>
- <td>asset</td><td>images and sound used in App</td>
+ <td>assets</td><td>images and sound used in App</td>
+</tr>
+<tr>
+ <td>config</td><td>structured info outside the control of this repo</td>
 </tr>
 <tr>
  <td>doc</td><td>documentations and references</td>
 </tr>
 <tr>
- <td>src</td><td>source files(.py, .sql)</td>
+ <td>src</td><td>source files (.py)</td>
 </tr>
 </table>
 
