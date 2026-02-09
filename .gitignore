@@ -3,3 +3,4 @@ __pycache__
 *.iml
 note.md
 test.py
+.DS_Store
