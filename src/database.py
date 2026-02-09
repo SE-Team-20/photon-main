@@ -13,13 +13,21 @@ from constants import (
 )
 
 class DB:
-  # TODO: return false if failed to connect to the database
   # TODO: check if the method should self.conn.commit() every time
   def __init__(self):
-    self.conn = psycopg2.connect(**readConfig(DBINIT_PATH, DBINIT_SEC))
-    self.cur = self.conn.cursor()
+    try:
+      self.conn = psycopg2.connect(**readConfig(DBINIT_PATH, DBINIT_SEC))
+      self.cur = self.conn.cursor()
+    except psycopg2.Error as e:
+      print("DB connection failed:", e)
+      self.conn=None
+      self.cur=None
     self.create_tables()
-    print("successfully created a table")
+    print("DB connection succeeded")
+  
+  def _ensure_db(self):
+    if self.conn is None or self.cur is None:
+      raise RuntimeError("Database is not connected")
   
   def close(self):
     if self.cur:
@@ -28,6 +36,7 @@ class DB:
       self.conn.close()
 
   def create_tables(self):
+    self._ensure_db()
     # Scheme "player ID - codename - team ID - score"
     # (team ID is ommited to take advantage of modulo property)
     self.cur.execute(sql.SQL(
@@ -61,6 +70,7 @@ class DB:
     return player_id+team_id*MAX_NUM_PLAYER
   
   def set_player(self, player_id: int, codename: str, team_id: int):
+    self._ensure_db()
     if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
       return False
     
@@ -81,6 +91,7 @@ class DB:
     ))
 
   def update_score(self, diff:int, player_id:int, team_id:int):
+    self._ensure_db()
     if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
       return False
     
@@ -119,6 +130,7 @@ class DB:
 
   # returns a tuple of {rank, codename, score} in non-decreasing order
   def get_leaderboard(self, team_id:int):
+    self._ensure_db()
     if not validIndex(team_id, NUM_TEAM):
       return False
     
@@ -155,6 +167,7 @@ class DB:
   
   # returns a pair of {team_id, player_id} 
   def get_player_info(self, equip_id: int):
+    self._ensure_db()
 
     self.cur.execute(sql.SQL(
       '''
@@ -173,6 +186,8 @@ class DB:
     return [idx/MAX_NUM_PLAYER, idx%MAX_NUM_PLAYER]
   
   def assign_equipment(self, player_id:int, team_id:int, equip_id:int):
+    self._ensure_db()
+
     if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
       return False
 
@@ -195,7 +210,10 @@ class DB:
 
     return self.cur.rowcount==1
 
+  # remove specific equipment
   def free_equipment(self, equip_id:int):
+    self._ensure_db()
+
     self.cur.execute(sql.SQL(
       '''
       DELETE FROM equips
@@ -209,6 +227,8 @@ class DB:
 
   # remove all rows
   def clear_equips(self):
+    self._ensure_db()
+
     self.cur.execute(sql.SQL(
       '''
       TRUNCATE TABLE equips;
@@ -218,6 +238,8 @@ class DB:
   
   # set every row invalid
   def clear_players(self):
+    self._ensure_db()
+
     self.cur.execute(sql.SQL(
       '''
       UPDATE players
