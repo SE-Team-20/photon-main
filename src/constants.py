@@ -49,9 +49,6 @@ CODE_BASESCORE_GREEN = "43"
 # Database
 # =========================================================
 
-DB_TABLE_PLAYERS ="players"
-DB_TABLE_EQUIPS = "equipments"
-
 
 # =========================================================
 # Gameplay

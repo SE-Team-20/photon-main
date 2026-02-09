@@ -8,8 +8,6 @@ from util import (
 from constants import (
   DBINIT_PATH,
   DBINIT_SEC,
-  DB_TABLE_PLAYERS,
-  DB_TABLE_EQUIPS,
   MAX_NUM_PLAYER,
   NUM_TEAM
 )
@@ -36,7 +34,7 @@ class DB:
     # (team ID is ommited to take advantage of modulo property)
     self.cur.execute(sql.SQL(
       '''
-      CREATE TABLE IF NOT EXISTS {} (
+      CREATE TABLE IF NOT EXISTS players (
         player_id SERIAL PRIMARY KEY,
         codename TEXT,
         score NUMERIC DEFAULT 0,
@@ -45,24 +43,20 @@ class DB:
       WITH (fillfactor = {});
      '''
     ).format(
-      sql.Identifier(DB_TABLE_PLAYERS),
       sql.Literal(MAX_NUM_PLAYER*NUM_TEAM) 
     ))
 
     # Scheme "player ID - equipment ID"
     self.cur.execute(sql.SQL(
       '''
-      CREATE TABLE IF NOT EXISTS {} (
+      CREATE TABLE IF NOT EXISTS equips (
         player_id INTEGER 
-          REFERENCES {}(player_id) 
+          REFERENCES players(player_id) 
           ON DELETE CASCADE,
         equip_id INTEGER,
         PRIMARY KEY (player_id, equip_id)
       );
      '''
-    ).format(
-      sql.Identifier(DB_TABLE_EQUIPS),
-      sql.Identifier(DB_TABLE_PLAYERS)
     ))
   
   def getIndex(player_id: int, team_id: int):
@@ -72,8 +66,8 @@ class DB:
     if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
       return False
     
-    # disable the row if player_id is at size 0
-    registered = "TRUE" if len(player_id)>0 else "FALSE"
+    # disable the row if the codename is at size 0
+    registered = "TRUE" if len(codename)>0 else "FALSE"
 
     self.cur.execute(sql.SQL(
       '''
@@ -88,10 +82,65 @@ class DB:
       sql.Literal(self.getIndex(player_id, team_id))
     ))
 
-  # TODO: Update score (change, playerID, teamID)
+  def update_score(self, diff:int, player_id:int, team_id:int):
+    if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
+      return False
+    
+    idx=self.getIndex(player_id, team_id)
 
-  # TODO: Get ranking (teamID)
-  # cur.fetchall() returns an array of data concatenated as a string
+    # 1. get the current score
+    self.cur.execute(sql.SQL(
+      '''
+      SELECT score
+      FROM players
+      WHERE player_id = {}
+        AND is_registered=TRUE;
+      '''
+    ).format(
+      sql.Literal(idx)
+    ))
+
+    row=self.cur.fetchone()
+    if row is None:
+      return False
+
+    # 2. apply the change
+    new_score=row[0]+diff
+
+    self.cur.execute(sql.SQL(
+      '''
+      UPDATE players
+      SET score = {}
+      WHERE player_id = {}
+        AND is_registered=TRUE;
+      '''
+    ).format(
+      sql.Literal(new_score),
+      sql.Literal(idx)
+    ))
+
+  # returns a tuple of {rank, codename, score} in non-decreasing order
+  def get_leaderboard(self, team_id:int):
+    if not validIndex(team_id, NUM_TEAM):
+      return False
+    
+    # 1. get an array 
+    lb=team_id*MAX_NUM_PLAYER
+    ub=lb+MAX_NUM_PLAYER
+
+    self.cur.execute(sql.SQL(
+      '''
+      SELECT codename, score
+      FROM players
+      WHERE {} <= player_id 
+        AND player_id < {} 
+        AND is_registered=TRUE
+      ORDER BY score, player_id;
+      '''
+    ).format(
+      sql.Literal(lb),
+      sql.Literal(ub)
+    ))
 
   # TODO: Get player ID (equipID)
 
