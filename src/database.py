@@ -12,8 +12,6 @@ from constants import (
   NUM_TEAM
 )
 
-from configparser import ConfigParser
-
 class DB:
   # TODO: return false if failed to connect to the database
   # TODO: check if the method should self.conn.commit() every time
@@ -124,23 +122,37 @@ class DB:
     if not validIndex(team_id, NUM_TEAM):
       return False
     
-    # 1. get an array 
+    # 1. get an array (player_id is a dummy slot replaced with a rank)
     lb=team_id*MAX_NUM_PLAYER
     ub=lb+MAX_NUM_PLAYER
 
     self.cur.execute(sql.SQL(
       '''
-      SELECT codename, score
+      SELECT player_id, codename, score
       FROM players
       WHERE {} <= player_id 
         AND player_id < {} 
         AND is_registered=TRUE
-      ORDER BY score, player_id;
+      ORDER BY score, codename;
       '''
     ).format(
       sql.Literal(lb),
       sql.Literal(ub)
     ))
+    
+    rows=self.cur.fetchall()
+    if not rows:
+      return []
+
+    # 2. write a rank and return the set of tuples
+    res=[list(r) for r in rows]
+
+    res[0][0]= 1
+    for i in range(1, len(res)):
+      res[i][0]= res[i-1][0] if res[i][2]==res[i-1][2] else i+1
+    
+    return [tuple(r) for r in res]
+
 
   # TODO: Get player ID (equipID)
 
