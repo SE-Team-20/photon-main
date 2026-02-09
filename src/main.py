@@ -16,6 +16,9 @@ from PyQt6.QtCore import Qt, QTimer, QSize
 from constants import (
     LOGO
 )
+from util import (
+    isDevMode
+)
 
 
 # Above are all helper classes needed from PyQt6 for this project, so far.
@@ -163,7 +166,7 @@ def main():
     # Ensure window splashes on top of all other applications on start up
     splash.show()
     app.processEvents()
-    QTimer.singleShot(3000, lambda: show_main_window(splash))
+    QTimer.singleShot(0 if isDevMode() else 3000, lambda: show_main_window(splash))
     # After 3 seconds, run show main window.
     sys.exit(app.exec())
 
