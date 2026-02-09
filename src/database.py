@@ -23,6 +23,7 @@ class DB:
     self.conn = psycopg2.connect(**readConfig(DBINIT_PATH, DBINIT_SEC))
     self.cur = self.conn.cursor()
     self.create_tables()
+    print("successfully created a table")
   
   def close(self):
     if self.cur:
