@@ -1,9 +1,9 @@
 # Dev mode
 
 ## Why dev mode?
-This is for automated testing to effectively verify implementation correctness.
+This technique is for a better QA experience.
 
-With this technique, at least, we can...
+At least, it can achieve...
 - skip the splashscreen waiting time
 - avoid typing in info to the table to test APIs every time
 
@@ -24,7 +24,7 @@ python main.py
 
 ```
 
-## How to implement a dev mode if statement
+## How to implement "if dev mode" in code
 Please use a function at [src/util.py](../src/util.py).
 
 Below is a demonstration.
