@@ -13,7 +13,6 @@ from constants import (
 )
 
 class DB:
-  # TODO: check if the method should self.conn.commit() every time
   def __init__(self):
     try:
       self.conn = psycopg2.connect(**readConfig(DBINIT_PATH, DBINIT_SEC))
@@ -29,6 +28,19 @@ class DB:
     if self.conn is None or self.cur is None:
       raise RuntimeError("Database is not connected")
   
+  def _safe_exec(self, query):
+    try:
+      self.cur.execute(query)
+      self.conn.commit()
+      return True
+    except Exception as e:
+      self.conn.rollback()
+      print("DB error:", e)
+      return False
+  
+  def _get_index(player_id: int, team_id: int):
+    return player_id+team_id*MAX_NUM_PLAYER
+
   def close(self):
     if self.cur:
       self.cur.close()
@@ -39,7 +51,8 @@ class DB:
     self._ensure_db()
     # Scheme "player ID - codename - team ID - score"
     # (team ID is ommited to take advantage of modulo property)
-    self.cur.execute(sql.SQL(
+
+    self._safe_exec(sql.SQL(
       '''
       CREATE TABLE IF NOT EXISTS players (
         player_id SERIAL PRIMARY KEY,
@@ -54,7 +67,7 @@ class DB:
     ))
 
     # Scheme "player ID - equipment ID"
-    self.cur.execute(sql.SQL(
+    self._safe_exec(sql.SQL(
       '''
       CREATE TABLE IF NOT EXISTS equips (
         player_id INTEGER 
@@ -66,9 +79,7 @@ class DB:
      '''
     ))
   
-  def getIndex(player_id: int, team_id: int):
-    return player_id+team_id*MAX_NUM_PLAYER
-  
+  # assign a codename to a specific player id row
   def set_player(self, player_id: int, codename: str, team_id: int):
     self._ensure_db()
     if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
@@ -77,7 +88,7 @@ class DB:
     # disable the row if the codename is at size 0
     registered = "TRUE" if len(codename)>0 else "FALSE"
 
-    self.cur.execute(sql.SQL(
+    self._safe_exec(sql.SQL(
       '''
       UPDATE players
       SET codename = '{}',
@@ -87,18 +98,19 @@ class DB:
     ).format(
       sql.Identifier(codename),
       sql.Identifier(registered),
-      sql.Literal(self.getIndex(player_id, team_id))
+      sql.Literal(self._get_index(player_id, team_id))
     ))
 
+  # update the player score by a difference to the previous score
   def update_score(self, diff:int, player_id:int, team_id:int):
     self._ensure_db()
     if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
       return False
     
-    idx=self.getIndex(player_id, team_id)
+    idx=self._get_index(player_id, team_id)
 
     # 1. get the current score
-    self.cur.execute(sql.SQL(
+    self._safe_exec(sql.SQL(
       '''
       SELECT score
       FROM players
@@ -116,7 +128,7 @@ class DB:
     # 2. apply the change
     new_score=row[0]+diff
 
-    self.cur.execute(sql.SQL(
+    self._safe_exec(sql.SQL(
       '''
       UPDATE players
       SET score = {}
@@ -138,7 +150,7 @@ class DB:
     lb=team_id*MAX_NUM_PLAYER
     ub=lb+MAX_NUM_PLAYER
 
-    self.cur.execute(sql.SQL(
+    self._safe_exec(sql.SQL(
       '''
       SELECT player_id, codename, score
       FROM players
@@ -169,7 +181,7 @@ class DB:
   def get_player_info(self, equip_id: int):
     self._ensure_db()
 
-    self.cur.execute(sql.SQL(
+    self._safe_exec(sql.SQL(
       '''
       SELECT player_id
       FROM equips
@@ -192,7 +204,7 @@ class DB:
       return False
 
     # INSERT iff equip_id is yet to be registered
-    self.cur.execute(sql.SQL(
+    self._safe_exec(sql.SQL(
       '''
       INSERT INTO equips (equip_id, player_id)
       SELECT {}, {}
@@ -204,7 +216,7 @@ class DB:
       '''
     ).format(
       sql.Literal(equip_id),
-      sql.Literal(self.getIndex(player_id, team_id)),
+      sql.Literal(self._get_index(player_id, team_id)),
       sql.Literal(equip_id)
     ))
 
@@ -214,7 +226,7 @@ class DB:
   def free_equipment(self, equip_id:int):
     self._ensure_db()
 
-    self.cur.execute(sql.SQL(
+    self._safe_exec(sql.SQL(
       '''
       DELETE FROM equips
       WHERE equip_id = {};
@@ -229,7 +241,7 @@ class DB:
   def clear_equips(self):
     self._ensure_db()
 
-    self.cur.execute(sql.SQL(
+    self._safe_exec(sql.SQL(
       '''
       TRUNCATE TABLE equips;
       '''
@@ -240,7 +252,7 @@ class DB:
   def clear_players(self):
     self._ensure_db()
 
-    self.cur.execute(sql.SQL(
+    self._safe_exec(sql.SQL(
       '''
       UPDATE players
       SET is_registered = FALSE
