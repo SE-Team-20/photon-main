@@ -152,14 +152,54 @@ class DB:
       res[i][0]= res[i-1][0] if res[i][2]==res[i-1][2] else i+1
     
     return [tuple(r) for r in res]
+  
+  # returns a pair of {team_id, player_id} 
+  def get_player_info(self, equip_id: int):
 
+    self.cur.execute(sql.SQL(
+      '''
+      SELECT player_id
+      FROM equips
+      WHERE equip_id={}
+      '''
+    ).format(
+      sql.Literal(equip_id)
+    ))
 
-  # TODO: Get player ID (equipID)
+    idx=self.cur.fetchone()
+    if idx is None or not validIndex(idx, NUM_TEAM*MAX_NUM_PLAYER):
+      return False
 
-  # TODO: Get team ID (equipID)
+    return [idx/MAX_NUM_PLAYER, idx%MAX_NUM_PLAYER]
+  
+  def assign_equipment(self, player_id:int, team_id:int, equip_id:int):
+    if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
+      return False
 
-  # TODO: Get team ID (playerID, teamID)
+    # INSERT iff equip_id is yet to be registered
+    self.cur.execute(sql.SQL(
+      '''
+      INSERT INTO equips (equip_id, player_id)
+      SELECT {}, {}
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM equips
+        WHERE equip_id = {}
+      );
+      '''
+    ).format(
+      sql.Literal(equip_id),
+      sql.Literal(self.getIndex(player_id, team_id)),
+      sql.Literal(equip_id)
+    ))
+
+    return self.cur.rowcount==1
+
 
   # TODO: Assign equipment
 
   # TODO: Collect equipment
+
+
+  # TODO: clear equips
+  # TODO: clear players
