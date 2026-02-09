@@ -16,3 +16,8 @@ def readConfig(filename, section):
     raise Exception('Section {0} not found in the {1} file'.format(section, filename))
   
   return res
+
+import os
+
+def isDevMode():
+  return os.getenv("APP_MODE")=="DEV"
