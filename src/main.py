@@ -20,6 +20,10 @@ from util import (
     isDevMode
 )
 
+# TODO: 
+# using a method that takes a reference of QWindow should be able to abstract decorations a lot
+# this main.py file should only be responsible for which screen to apply
+# for a future maintainability
 
 # Above are all helper classes needed from PyQt6 for this project, so far.
 class MainWindow(QMainWindow):
