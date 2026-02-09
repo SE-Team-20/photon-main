@@ -15,7 +15,7 @@
 </thread>
 <tr>
  <td>close()</td>
- <td>close both tables</td>
+ <td>close the database</td>
  <td></td>
  <td></td>
 </tr>
@@ -71,5 +71,5 @@
 </table>
 
 ## 2. Relational database structure
-1. player ID - codename - team ID - score
-2. equip ID - player ID
+1. player ID x team ID - codename - score
+2. equip ID - player ID x team ID
