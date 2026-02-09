@@ -195,11 +195,33 @@ class DB:
 
     return self.cur.rowcount==1
 
+  def free_equipment(self, equip_id:int):
+    self.cur.execute(sql.SQL(
+      '''
+      DELETE FROM equips
+      WHERE equip_id = {};
+      '''
+    ).format(
+      sql.Literal(equip_id)
+    ))
 
-  # TODO: Assign equipment
+    return self.cur.rowcount==1
 
-  # TODO: Collect equipment
-
-
-  # TODO: clear equips
-  # TODO: clear players
+  # remove all rows
+  def clear_equips(self):
+    self.cur.execute(sql.SQL(
+      '''
+      TRUNCATE TABLE equips;
+      '''
+    ))
+    return self.cur.rowcount==1
+  
+  # set every row invalid
+  def clear_players(self):
+    self.cur.execute(sql.SQL(
+      '''
+      UPDATE players
+      SET is_registered = FALSE
+      '''
+    ))
+    return self.cur.rowcount==1
