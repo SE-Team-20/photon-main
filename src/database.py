@@ -21,7 +21,7 @@ class DB:
       print("DB connection failed:", e)
       self.conn=None
       self.cur=None
-    self.create_tables()
+    self._create_tables()
     print("DB connection succeeded")
   
   def _ensure_db(self):
@@ -46,8 +46,10 @@ class DB:
       self.cur.close()
     if self.conn:
       self.conn.close()
+    self.cur=None
+    self.conn=None
 
-  def create_tables(self):
+  def _create_tables(self):
     self._ensure_db()
     # Scheme "player ID - codename - team ID - score"
     # (team ID is ommited to take advantage of modulo property)
@@ -80,7 +82,7 @@ class DB:
     ))
   
   # assign a codename to a specific player id row
-  def set_player(self, player_id: int, codename: str, team_id: int):
+  def set_player(self, player_id: int, team_id: int, codename: str):
     self._ensure_db()
     if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
       return False
@@ -92,7 +94,8 @@ class DB:
       '''
       UPDATE players
       SET codename = '{}',
-        is_registered = {}
+        is_registered = {},
+        score = 0
       WHERE player_id = {};
       '''
     ).format(
