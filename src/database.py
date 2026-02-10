@@ -52,6 +52,7 @@ class DB:
   def _create_table(self):
     self._ensure_db()
 
+# TODO: change a scheme and add "game session ID" to keep track of the player pool for the specific match
     self._safe_exec(sql.SQL(
       '''
       CREATE TABLE IF NOT EXISTS players (
@@ -68,68 +69,23 @@ class DB:
     ))
   
   # assign a codename to a specific player id row
-  def set_player(self, player_id: int, team_id: int, codename: str):
+  # TODO: make it register to the buffer on memory instead
+  def set_player(self, row_index: int, team_id: int, codename: str):
     self._ensure_db()
     if not validIndex(team_id, NUM_TEAM):
       return False
-    
-    # disable the row if the codename is at size 0
-    registered = "TRUE" if len(codename)>0 else "FALSE"
-
-    self._safe_exec(sql.SQL(
-      '''
-      UPDATE players
-      SET codename = '{}',
-        team_id = {},
-        is_registered = {},
-        score = 0
-      WHERE player_id = {};
-      '''
-    ).format(
-      sql.Identifier(codename),
-      sql.Literal(team_id),
-      sql.Identifier(registered),
-      sql.Literal(player_id)
-    ))
+  
+  # TODO: 
+  def assign_equip(self, row_index: int, team_id: int, equip_id: int):
+    self._ensure_db()
+    if not validIndex(team_id, NUM_TEAM):
+      return False
+    return False
 
   # update the player score by a difference to the previous score
-  def update_score(self, diff:int, player_id:int, team_id:int):
+  def update_score(self, diff:int, player_id:int):
     self._ensure_db()
-    if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
-      return False
-    
-    idx=self._get_index(player_id, team_id)
-
-    # 1. get the current score
-    self._safe_exec(sql.SQL(
-      '''
-      SELECT score
-      FROM players
-      WHERE player_id = {}
-        AND is_registered=TRUE;
-      '''
-    ).format(
-      sql.Literal(idx)
-    ))
-
-    row=self.cur.fetchone()
-    if row is None:
-      return False
-
-    # 2. apply the change
-    new_score=row[0]+diff
-
-    self._safe_exec(sql.SQL(
-      '''
-      UPDATE players
-      SET score = {}
-      WHERE player_id = {}
-        AND is_registered=TRUE;
-      '''
-    ).format(
-      sql.Literal(new_score),
-      sql.Literal(idx)
-    ))
+    return False
 
   # returns a tuple of {rank, codename, score} in non-decreasing order
   def get_leaderboard(self, team_id:int):
@@ -168,85 +124,18 @@ class DB:
     
     return [tuple(r) for r in res]
   
-  # returns a pair of {team_id, player_id} 
+  # TODO: returns a player ID
   def get_player_info(self, equip_id: int):
-    self._ensure_db()
-
-    self._safe_exec(sql.SQL(
-      '''
-      SELECT player_id
-      FROM equips
-      WHERE equip_id={}
-      '''
-    ).format(
-      sql.Literal(equip_id)
-    ))
-
-    idx=self.cur.fetchone()
-    if idx is None or not validIndex(idx, NUM_TEAM*MAX_NUM_PLAYER):
-      return False
-
-    return [idx/MAX_NUM_PLAYER, idx%MAX_NUM_PLAYER]
+    return False
   
-  def assign_equipment(self, player_id:int, team_id:int, equip_id:int):
-    self._ensure_db()
-
-    if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
-      return False
-
-    # INSERT iff equip_id is yet to be registered
-    self._safe_exec(sql.SQL(
-      '''
-      INSERT INTO equips (equip_id, player_id)
-      SELECT {}, {}
-      WHERE NOT EXISTS (
-        SELECT 1
-        FROM equips
-        WHERE equip_id = {}
-      );
-      '''
-    ).format(
-      sql.Literal(equip_id),
-      sql.Literal(self._get_index(player_id, team_id)),
-      sql.Literal(equip_id)
-    ))
-
-    return self.cur.rowcount==1
-
-  # remove specific equipment
+  # TODO: 
   def free_equipment(self, equip_id:int):
-    self._ensure_db()
+    return False
 
-    self._safe_exec(sql.SQL(
-      '''
-      DELETE FROM equips
-      WHERE equip_id = {};
-      '''
-    ).format(
-      sql.Literal(equip_id)
-    ))
-
-    return self.cur.rowcount==1
-
-  # remove all rows
-  def clear_equips(self):
-    self._ensure_db()
-
-    self._safe_exec(sql.SQL(
-      '''
-      TRUNCATE TABLE equips;
-      '''
-    ))
-    return self.cur.rowcount==1
+  # TODO: 
+  def free_equips(self):
+    return False
   
-  # set every row invalid
-  def clear_players(self):
-    self._ensure_db()
-
-    self._safe_exec(sql.SQL(
-      '''
-      UPDATE players
-      SET is_registered = FALSE
-      '''
-    ))
-    return self.cur.rowcount==1
+  # TODO: 
+  def clear_buffer(self):
+    return False
