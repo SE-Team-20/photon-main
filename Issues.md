@@ -1,7 +1,9 @@
 # Issues
+last-updated: 02/10/2026
+by: RyoB
 
 GUI
-- needs more utiluty buttons
+- needs more utility buttons
 - should adapt different approaches in adding a new entry (modal)
 
 Database
