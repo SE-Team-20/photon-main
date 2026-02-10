@@ -1,0 +1,3 @@
+# All The External Libraries 
+PyQt6
+psycopg2-binary
