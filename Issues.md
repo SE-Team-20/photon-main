@@ -15,4 +15,5 @@ UDP socket
 - needs an user interface (=GUI) for UDP receive IP and broadcast IP
 
 Install script
+- asks TA about the install script requirement on Feb 12th
 - needs to be able to be run on every common OS (Windows, Mac, Linux)
