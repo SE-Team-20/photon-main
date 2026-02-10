@@ -20,7 +20,8 @@ CONFIG_DIR = BASE_DIR / "config"
 # Image File Paths
 # =========================================================
 
-LOGO = IMAGES_DIR / "logo.jpg"
+LOGO = Path(IMAGES_DIR / "logo.jpg").as_posix()
+BLURRED_LOGO = Path(IMAGES_DIR / "blurredlogo.jpg").as_posix()
 # BACKGROUND = IMAGES_DIR / "background.jpg"
 # DEFAULT_AVATAR = IMAGES_DIR / "default_avatar.png"
 
