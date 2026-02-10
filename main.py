@@ -20,12 +20,19 @@ class MainWindow(QMainWindow):
         green_entry_box = QVBoxLayout(self.green_panel)
 
         red_label = QLabel("RED TEAM")
-        red_label.setStyleSheet("color: red; font-weight: bold; font-size: 18px;")
+        red_label.setStyleSheet("""
+        color: red;
+        font-weight: bold;
+        font-size: 36px;
+        font-family: 'Orbitron', 'Courier New', sans-serif; """)
         red_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         red_entry_box.addWidget(red_label)
-
         green_label = QLabel("GREEN TEAM")
-        green_label.setStyleSheet("color: green; font-weight: bold; font-size: 18px;")
+        green_label.setStyleSheet("""
+        color: green;
+        font-weight: bold;
+        font-size: 36px;
+        font-family: 'Orbitron', 'Courier New', sans-serif; """)
         green_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
 
@@ -45,6 +52,14 @@ class MainWindow(QMainWindow):
 
         # Set central Widget
         central_widget = QWidget()
+        central_widget.setObjectName("MainWindowWidget")
+        central_widget.setStyleSheet("""
+            #MainWindowWidget {
+                border-image: url('blurredlogo.jpg');
+                background-position: center;
+                }""")
+        central_widget.setLayout(main_layout)
+        self.setCentralWidget(central_widget)
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
 
@@ -65,17 +80,22 @@ class MainWindow(QMainWindow):
         cool_font = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: #e0e0e0;"
         # Add QLineEdit for each entry and a QPushButton for submission on each entry
         for row in range(1, 16):
+            player_index_label = QLabel(str(row-1))
+            player_index_label.setStyleSheet("color: black; font-weight: bold;")
+            player_index_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            player_entry_grid.addWidget(player_index_label, row, 0)
             row_data = []
             for col in range(2):
                 entry = QLineEdit()
                 entry.setFixedSize(80, 20)
                 entry.setStyleSheet(cool_font)
-                player_entry_grid.addWidget(entry, row, col)
+                player_entry_grid.addWidget(entry, row, col + 1)
                 row_data.append(entry)
             row_btn = QPushButton("⏎")
             row_btn.setFixedSize(30, 20)
-            row_btn.setStyleSheet("font-size: 10px; background-color: #FFFFF;")
-            row_btn.clicked.connect(lambda checked, r=row_data, t=team_name: self.on_row_submit(r, t))
+            row_btn.setStyleSheet("font-size: 10px; background-color: #16588E;")
+            player_entry_grid.addWidget(row_btn, row, 3)
+            row_btn.clicked.connect(lambda checked, r=row_data, t=team_name, index = row - 1: self.on_row_submit(r, t, index))
             # The code above creates an anonymous function that creates anonymous variables to quickly grab the row
             # that was clicked and the team name of that grid. This then is passed to our MainWindow function
             # on_row_submit that takes the row and team name, this will then allow precise parsing on submission.
@@ -86,12 +106,12 @@ class MainWindow(QMainWindow):
         parent_layout.addLayout(player_entry_grid)
         return entries
 
-    def on_row_submit(self, row_data, team):
+    def on_row_submit(self, row_data, team, index):
         player_id = row_data[0].text().strip()
         equip_id = row_data[1].text().strip()
         if player_id and equip_id:
             # If both fields are found, run this logic.
-            print(f"[{team}] SUCCESS - Player: {player_id}, Equipment: {equip_id}")
+            print(f"[{team}] SUCCESS - Player: {player_id}, Equipment: {equip_id}, Player Index: {index}")
 
             # Reset style in case ERROR correction by user.
             row_data[0].setStyleSheet("color: black;")
@@ -108,7 +128,7 @@ class RedTeamPanel(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         # Draw a dark red rectangle that fills this specific widget.
-        painter.setBrush(QBrush(QColor(100, 0, 0)))
+        painter.setBrush(QBrush(QColor(100, 0, 0, 127)))
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRect(self.rect())
 
@@ -116,7 +136,7 @@ class GreenTeamPanel(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         # Draw a green rectangle that fills this specific widget.
-        painter.setBrush(QBrush(QColor(0, 100, 0))) # Dark Green
+        painter.setBrush(QBrush(QColor(0, 100, 0, 127))) # Dark Green
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRect(self.rect())
 
