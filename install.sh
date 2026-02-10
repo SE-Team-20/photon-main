@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 echo "Installing Photon Laser Tag System..."
