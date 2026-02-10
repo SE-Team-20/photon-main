@@ -18,4 +18,3 @@ if __name__ == "__main__":
   else:
     print("--- running in release mode ---")
   main()
-  
