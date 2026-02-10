@@ -11,6 +11,7 @@
 
 # Lists of errors
 
+# equipment ID needs to be an integer
 # equipment ID remaining blank
 # codename blank but equip ID filled
 # not enough participants (at least 1 for each team)
