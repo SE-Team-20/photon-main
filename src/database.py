@@ -3,6 +3,7 @@ from psycopg2 import sql
 from util import (
   validIndex,
   readConfig,
+  isDevMode,
 )
 
 from constants import (
@@ -11,7 +12,7 @@ from constants import (
   MAX_NUM_PLAYER,
   NUM_TEAM
 )
-
+# TODO: fix all
 class DB:
   def __init__(self):
     try:
@@ -21,8 +22,9 @@ class DB:
       print("DB connection failed:", e)
       self.conn=None
       self.cur=None
-    self._create_tables()
-    print("DB connection succeeded")
+    self._create_table()
+    if isDevMode():
+      print("dev: DB connection succeeded")
   
   def _ensure_db(self):
     if self.conn is None or self.cur is None:
@@ -37,9 +39,6 @@ class DB:
       self.conn.rollback()
       print("DB error:", e)
       return False
-  
-  def _get_index(player_id: int, team_id: int):
-    return player_id+team_id*MAX_NUM_PLAYER
 
   def close(self):
     if self.cur:
@@ -49,15 +48,15 @@ class DB:
     self.cur=None
     self.conn=None
 
-  def _create_tables(self):
+  # Scheme "player ID - codename - team ID - score"
+  def _create_table(self):
     self._ensure_db()
-    # Scheme "player ID - codename - team ID - score"
-    # (team ID is ommited to take advantage of modulo property)
 
     self._safe_exec(sql.SQL(
       '''
       CREATE TABLE IF NOT EXISTS players (
         player_id SERIAL PRIMARY KEY,
+        team_id INTEGER DEFAULT -1,
         codename TEXT,
         score NUMERIC DEFAULT 0,
         is_registered BOOLEAN DEFAULT FALSE
@@ -67,24 +66,11 @@ class DB:
     ).format(
       sql.Literal(MAX_NUM_PLAYER*NUM_TEAM) 
     ))
-
-    # Scheme "player ID - equipment ID"
-    self._safe_exec(sql.SQL(
-      '''
-      CREATE TABLE IF NOT EXISTS equips (
-        player_id INTEGER 
-          REFERENCES players(player_id) 
-          ON DELETE CASCADE,
-        equip_id INTEGER,
-        PRIMARY KEY (player_id, equip_id)
-      );
-     '''
-    ))
   
   # assign a codename to a specific player id row
   def set_player(self, player_id: int, team_id: int, codename: str):
     self._ensure_db()
-    if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
+    if not validIndex(team_id, NUM_TEAM):
       return False
     
     # disable the row if the codename is at size 0
@@ -94,14 +80,16 @@ class DB:
       '''
       UPDATE players
       SET codename = '{}',
+        team_id = {},
         is_registered = {},
         score = 0
       WHERE player_id = {};
       '''
     ).format(
       sql.Identifier(codename),
+      sql.Literal(team_id),
       sql.Identifier(registered),
-      sql.Literal(self._get_index(player_id, team_id))
+      sql.Literal(player_id)
     ))
 
   # update the player score by a difference to the previous score
