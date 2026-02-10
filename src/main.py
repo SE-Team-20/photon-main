@@ -1,4 +1,5 @@
 import sys
+import time
 from PyQt6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
@@ -20,14 +21,18 @@ from constants import (
 from util import (
     isDevMode
 )
+from udp_server import UDPServer
 
 # TODO: 
 # using a class for each UI element for its declarative nature and data binding
 
 # Above are all helper classes needed from PyQt6 for this project, so far.
 class MainWindow(QMainWindow):
-    def __init__(self):
+    # TODO: fix a direct assignment as View and Model should be separated
+    # should be resolved by passing a data reference to udp_server from the main function
+    def __init__(self, udp_server):
         super().__init__()
+        self.udp = udp_server
         #Create GUI
         self.setWindowTitle("Player Entry Terminal Screen")
         self.setGeometry(400, 150, 1050, 800)
@@ -135,6 +140,9 @@ class MainWindow(QMainWindow):
             # If both fields are found, run this logic.
             print(f"[{team}] SUCCESS - Player: {player_id}, Equipment: {equip_id}, Player Index: {index}")
 
+            # TODO: fix the direct assignment
+            self.udp.broadcast_equipment_id(equip_id)
+
             # Reset style in case ERROR correction by user.
             row_data[0].setStyleSheet("color: black;")
             row_data[1].setStyleSheet("color: black;")
@@ -165,13 +173,23 @@ class GreenTeamPanel(QWidget):
 global_main_window = None
 # Allows main window reference to stay alive
 
-def show_main_window(splash_screen):
+def show_main_window(splash_screen, udp):
     global global_main_window
-    global_main_window = MainWindow()
+    global_main_window = MainWindow(udp)
     global_main_window.show()
     splash_screen.finish(global_main_window)
 
 def main():
+    # Fetching UDP info
+    # TODO: make a query to the operator on the user interface instead
+    receive_ip = input("Enter UDP receive IP (default 0.0.0.0): ") or "0.0.0.0"
+    broadcast_ip = input("Enter UDP broadcast IP (default 255.255.255.255): ") or "255.255.255.255"
+
+    udp = UDPServer(
+        receive_ip=receive_ip,
+        broadcast_ip=broadcast_ip
+    )
+
     app = QApplication(sys.argv)
     screen_size = QGuiApplication.primaryScreen().size()/2
     # set application to scale according to user screen size
@@ -180,7 +198,8 @@ def main():
     # Ensure window splashes on top of all other applications on start up
     splash.show()
     app.processEvents()
-    QTimer.singleShot(0 if isDevMode() else 3000, lambda: show_main_window(splash))
+    # TODO: fix a direct assignment of UDP
+    QTimer.singleShot(0 if isDevMode() else 3000, lambda: show_main_window(splash, udp))
     # After 3 seconds, run show main window.
     sys.exit(app.exec())
 
