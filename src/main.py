@@ -35,6 +35,12 @@ class MainWindow(QMainWindow):
     # should be resolved by passing a data reference to udp_server from the main function
     def __init__(self, udp_server):
         super().__init__()
+
+        # Make the file display in front of any other apps
+        self.setWindowFlags(
+            self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint
+        )
+
         self.udp = udp_server
 
         self.setWindowTitle("PHOTON")
