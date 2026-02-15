@@ -44,7 +44,13 @@ class MainWindow(QMainWindow):
         self.udp = udp_server
 
         self.setWindowTitle("PHOTON")
-        self.setGeometry(400, 150, 1050, 800)
+
+        screen=QGuiApplication.primaryScreen().availableGeometry()
+        window_width = screen.width()//2
+        window_height = screen.height()//2
+        x=(screen.width() - window_width)//2
+        y=(screen.height() - window_height)//2
+        self.setGeometry(x, y, window_width, window_height)
 
         # Central widget with background image
         central_widget = QWidget()
