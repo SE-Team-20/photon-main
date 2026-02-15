@@ -32,6 +32,7 @@ class DB:
   
   def _safe_exec(self, query):
     try:
+      self._ensure_db()
       self.cur.execute(query)
       self.conn.commit()
       return True
@@ -40,25 +41,17 @@ class DB:
       print("DB error:", e)
       return False
 
-  # Scheme "player ID - codename - team ID - score"
-  # TODO: 
   def _create_table(self):
-    self._ensure_db()
-
-    # TODO: change a scheme and add "game session ID" to keep track of the player pool for the specific match
     self._safe_exec(sql.SQL(
       '''
       CREATE TABLE IF NOT EXISTS players (
         player_id SERIAL PRIMARY KEY,
-        team_id INTEGER DEFAULT -1,
         codename TEXT,
-        score NUMERIC DEFAULT 0,
+        highscore NUMERIC DEFAULT 0,
+        playcnt NUMERIC DEFAULT 0,
         is_registered BOOLEAN DEFAULT FALSE
-      )
-      WITH (fillfactor = {});
+      );
      '''
-    ).format(
-      sql.Literal(MAX_NUM_PLAYER*NUM_TEAM) 
     ))
 
   def close(self):
