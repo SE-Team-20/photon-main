@@ -1,7 +1,24 @@
 # Photon main (team 20)
 [quick link to the main branch](https://github.com/SE-Team-20/photon-main/tree/main)
 
-## File organization strategy
+## Quick Run Instructions (Linux)
+1. Make scripts executable:
+```
+chmod +x install.sh run.sh
+```
+
+2. Install software:
+```
+./install.sh
+```
+
+3. Launch main program:
+```
+./run.sh
+```
+
+
+## File organization
 
 <table>
 <thread>

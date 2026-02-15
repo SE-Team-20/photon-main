@@ -19,8 +19,8 @@ echo "Upgrading pip..."
 pip install --upgrade pip
 
 echo "Installing Python dependencies..."
-if [ -f requirements.txt ]; then
-    pip install -r requirements.txt
+if [ -f config/requirements.txt ]; then
+    pip install -r config/requirements.txt
 else
     pip install PyQt6 psycopg2-binary pygame
 fi
