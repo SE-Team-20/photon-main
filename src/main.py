@@ -1,16 +1,17 @@
 import sys
 import time
+import database
 from PyQt6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QLineEdit,
     QLabel,
-    QPushButton,
     QWidget,
     QApplication,
     QSplashScreen,
     QHBoxLayout,
     QGridLayout,
+    QGraphicsDropShadowEffect,
 )
 from PyQt6.QtGui import QPixmap, QGuiApplication, QPainter, QBrush, QColor
 from PyQt6.QtCore import Qt, QTimer, QSize
@@ -23,8 +24,10 @@ from util import (
 )
 from udp_server import UDPServer
 
-# TODO: 
+
+# TODO:
 # using a class for each UI element for its declarative nature and data binding
+
 
 # Above are all helper classes needed from PyQt6 for this project, so far.
 class MainWindow(QMainWindow):
@@ -33,126 +36,258 @@ class MainWindow(QMainWindow):
     def __init__(self, udp_server):
         super().__init__()
         self.udp = udp_server
-        #Create GUI
-        self.setWindowTitle("Player Entry Terminal Screen")
+
+        self.setWindowTitle("PHOTON")
         self.setGeometry(400, 150, 1050, 800)
-        main_layout = QVBoxLayout()
-        entry_layout = QHBoxLayout()
 
-        self.red_panel = RedTeamPanel()
-        red_entry_box = QVBoxLayout(self.red_panel)
-
-        self.green_panel = GreenTeamPanel()
-        green_entry_box = QVBoxLayout(self.green_panel)
-
-        red_label = QLabel("RED TEAM")
-        red_label.setStyleSheet("""
-        color: red;
-        font-weight: bold;
-        font-size: 36px;
-        font-family: 'Orbitron', 'Courier New', sans-serif; """)
-        red_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        red_entry_box.addWidget(red_label)
-        green_label = QLabel("GREEN TEAM")
-        green_label.setStyleSheet("""
-        color: green;
-        font-weight: bold;
-        font-size: 36px;
-        font-family: 'Orbitron', 'Courier New', sans-serif; """)
-        green_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-
-        green_entry_box.addWidget(green_label)
-        entry_layout.addWidget(red_label)
-        entry_layout.addWidget(green_label)
-        main_layout.addLayout(entry_layout)
-
-        teams_layout = QHBoxLayout()
-
-        # Create red and green grids
-        self.red_entries = self.create_player_grid(red_entry_box, "RED")
-        self.green_entries = self.create_player_grid(green_entry_box, "GREEN")
-        teams_layout.addWidget(self.red_panel)
-        teams_layout.addWidget(self.green_panel)
-        main_layout.addLayout(teams_layout)
-
-        # Set central Widget
+        # Central widget with background image
         central_widget = QWidget()
         central_widget.setObjectName("MainWindowWidget")
         central_widget.setStyleSheet(f"""
-          #MainWindowWidget {{
-            border-image: url('{BLURRED_LOGO}');
-            background-position: center;
-          }}
+            #MainWindowWidget {{
+                border-image: url('{BLURRED_LOGO}');
+                background-position: center;
+            }}
         """)
-        central_widget.setLayout(main_layout)
-        self.setCentralWidget(central_widget)
-        central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
 
-    def create_player_grid(self, parent_layout, team_name):
+        # Main layout
+        main_layout = QHBoxLayout(central_widget)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        # Left side container
+        self.left_container = QWidget()
+        left_layout = QVBoxLayout(self.left_container)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(0)
+
+        # Red team panel
+        self.red_panel = RedTeamPanel()
+        self.red_panel.setLayout(QVBoxLayout())
+
+        # Right side container
+        self.right_container = QWidget()
+        right_layout = QVBoxLayout(self.right_container)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(0)
+
+        # Green team panel
+        self.green_panel = GreenTeamPanel()
+        self.green_panel.setLayout(QVBoxLayout())
+
+        self.red_label = QLabel("RED TEAM")
+        self.green_label = QLabel("GREEN TEAM")
+
+        # Style for red label
+        red_label_style = """
+            color: white;
+            font-weight: bold;
+            font-size: 36px;
+            font-family: 'Orbitron', 'Courier New', sans-serif;
+            background-color: rgba(100, 0, 0, 150);
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin: 10px;
+        """
+        self.red_label.setStyleSheet(red_label_style)
+        self.red_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Style for green label
+        green_label_style = red_label_style.replace("rgba(100, 0, 0, 150)", "rgba(0, 100, 0, 150)")
+        self.green_label.setStyleSheet(green_label_style)
+        self.green_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setOffset(0, 5)
+        shadow.setColor(QColor(0, 0, 0, 160))
+        self.red_label.setGraphicsEffect(shadow)
+        self.green_label.setGraphicsEffect(shadow)
+
+        left_layout.addStretch(2)                     # Push label down
+        left_layout.addWidget(self.red_label, alignment=Qt.AlignmentFlag.AlignHCenter)
+        left_layout.addStretch(1)                     # Space between label and panel
+        left_layout.addWidget(self.red_panel, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        right_layout.addStretch(2)
+        right_layout.addWidget(self.green_label, alignment=Qt.AlignmentFlag.AlignHCenter)
+        right_layout.addStretch(1)
+        right_layout.addWidget(self.green_panel, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        main_layout.addWidget(self.left_container, 1)
+        main_layout.addWidget(self.right_container, 1)
+
+        self.red_index_labels = []
+        self.green_index_labels = []
+
+        self.create_player_grid(self.red_panel.layout(), "RED", self.red_index_labels)
+        self.create_player_grid(self.green_panel.layout(), "GREEN", self.green_index_labels)
+
+        # Apply initial dimension ruling
+        self.update_panel_sizes()
+
+    def update_panel_sizes(self):
+        w = self.width()
+        h = self.height()
+        panel_width = int(w * 0.48) # 0.48 seems to give ideal width
+        panel_height = int(h * 0.5)
+        self.red_panel.setFixedSize(panel_width, panel_height)
+        self.green_panel.setFixedSize(panel_width, panel_height)
+
+    def resizeEvent(self, event):
+        # Called when window is resized, update panel sizes.
+        super().resizeEvent(event)
+        self.update_panel_sizes()
+
+    def create_player_grid(self, parent_layout, team_name, index_label_list):
         player_entry_grid = QGridLayout()
         entries = []
         id_prompt = QLabel("Player ID")
         eq_prompt = QLabel("Equipment ID")
-        id_prompt.setStyleSheet("color: white; font-weight: bold; font-size: 12px;")
-        eq_prompt.setStyleSheet("color: white; font-weight: bold; font-size: 12px;")
-        id_prompt.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        eq_prompt.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        action_prompt = QLabel("")
+        codename_prompt = QLabel("Codename")
+        for lbl in (id_prompt, codename_prompt, eq_prompt):
+            lbl.setStyleSheet("color: white; font-weight: bold; font-size: 12px;")
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # Add an item for each prompt necessary
-        player_entry_grid.addWidget(id_prompt, 0, 0)
-        player_entry_grid.addWidget(eq_prompt, 0, 1)
-        player_entry_grid.addWidget(action_prompt, 0, 2)
-        cool_font = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: #e0e0e0;"
-        # Add QLineEdit for each entry and a QPushButton for submission on each entry
+        player_entry_grid.addWidget(id_prompt, 0, 1)
+        player_entry_grid.addWidget(codename_prompt, 0, 2)
+        player_entry_grid.addWidget(eq_prompt, 0, 3)
+        cool_font = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: transparent;"
+        # Add QLineEdits for each entry
         for row in range(1, 16):
-            player_index_label = QLabel(str(row-1))
+            # Player number label (initially empty)
+            player_index_label = QLabel("")
             player_index_label.setStyleSheet("color: black; font-weight: bold;")
             player_index_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             player_entry_grid.addWidget(player_index_label, row, 0)
+            index_label_list.append(player_index_label)   # store for later updates
+
             row_data = []
-            for col in range(2):
-                entry = QLineEdit()
+            player_id_edit = QLineEdit()
+            codename_edit = QLineEdit()
+            equipment_id_edit = QLineEdit()
+            codename_edit.setReadOnly(True)
+            for entry in (player_id_edit, codename_edit, equipment_id_edit):
                 entry.setFixedSize(80, 20)
                 entry.setStyleSheet(cool_font)
-                player_entry_grid.addWidget(entry, row, col + 1)
-                row_data.append(entry)
-            row_btn = QPushButton("⏎")
-            row_btn.setFixedSize(30, 20)
-            row_btn.setStyleSheet("font-size: 10px; background-color: #16588E;")
-            player_entry_grid.addWidget(row_btn, row, 3)
-            row_btn.clicked.connect(lambda checked, r=row_data, t=team_name, index = row - 1: self.on_row_submit(r, t, index))
-            # The code above creates an anonymous function that creates anonymous variables to quickly grab the row
-            # that was clicked and the team name of that grid. This then is passed to our MainWindow function
-            # on_row_submit that takes the row and team name, this will then allow precise parsing on submission.
-
-            player_entry_grid.addWidget(row_btn, row, 2)
+            player_entry_grid.addWidget(player_id_edit, row, 1)
+            player_entry_grid.addWidget(codename_edit, row, 2)
+            player_entry_grid.addWidget(equipment_id_edit, row, 3)
+            row_data = [player_id_edit, codename_edit, equipment_id_edit]
             entries.append(row_data)
-
+            # Player ID entry
+            player_id_edit.returnPressed.connect(
+                lambda r=row_data, t=team_name, idx=row-1: self.on_player_id_enter(r, t, idx)
+            )
+            # Codename entry
+            codename_edit.returnPressed.connect(
+                lambda r=row_data, t=team_name, idx=row-1: self.on_codename_enter(r, t, idx)
+            )
+            # Equipment ID entry
+            equipment_id_edit.returnPressed.connect(
+                lambda r=row_data, t=team_name, idx=row-1: self.on_row_submit(r, t, idx)
+            )
+            # The code above creates anonymous functions that create anonymous variables to quickly grab the row
+            # that was clicked and the team name of that grid. This then is passed to our MainWindow functions
+            # on_row_submit on_player_id_enter that takes the row and team name, this will then allow precise parsing on submission.
         parent_layout.addLayout(player_entry_grid)
         return entries
 
-    def on_row_submit(self, row_data, team, index):
+    def on_player_id_enter(self, row_data, team, index):
+        # Called when Enter is pressed in a Player ID field.
+        # Looks up the codename from the database and fills the Codename field.
         player_id = row_data[0].text().strip()
-        equip_id = row_data[1].text().strip()
+
+        if team == "RED":
+            index_labels = self.red_index_labels
+        else:
+            index_labels = self.green_index_labels
+
+        if player_id:
+            # Show player number
+            index_labels[index].setText(f"Player #{index+1}")
+
+            # Convert to int as database expects integer
+            try:
+                player_id = int(player_id)
+            except ValueError:
+                return
+
+            # Query the database
+            codename = database.get_player_codename(player_id)
+
+            if codename is not None and codename is not False:
+                # fill the codename and move to equipment
+                row_data[1].setText(codename)
+                row_data[1].setReadOnly(True)
+                row_data[1].setStyleSheet("color: black;")
+                row_data[1].setPlaceholderText("")
+                row_data[2].setFocus()
+            else:
+                # Player not found, new player entry
+                row_data[1].clear()
+                row_data[1].setReadOnly(False)
+                row_data[1].setPlaceholderText("Enter codename for new player")
+                row_data[1].setStyleSheet("color: gray;")
+                row_data[1].setFocus()
+        else:
+            # Clear the number label and codename field
+            index_labels[index].setText("")
+            row_data[1].clear()
+            row_data[1].setReadOnly(True)
+            row_data[1].setPlaceholderText("")
+
+    def on_codename_enter(self, row_data, team, index):
+        # Called when Enter is pressed in the codename field
+        # If both Player ID and codename are non‑empty, attempts to add the player to the database.
+        # If successful, moves focus to Equipment ID.
+        # If the player already exists return false
+        if row_data[1].isReadOnly():
+            return
+
+        player_id_text = row_data[0].text().strip()
+        codename = row_data[1].text().strip()
+
+        if not player_id_text or not codename:
+            return
+
+        try:
+            player_id = int(player_id_text)
+        except ValueError:
+            return  # Invalid ID – ignore
+
+        # Attempt to add the new player
+        success = database.add_player(player_id, codename)
+
+        if success:
+            # Player added – update style and move to equipment
+            row_data[1].setReadOnly(True)
+            row_data[1].setStyleSheet("color: black;")
+            row_data[1].setPlaceholderText("")
+            row_data[2].setFocus()
+        else:
+            # Addition failed (likely because player already exists) – indicate error
+            row_data[1].setStyleSheet("border: 1px solid red; background-color: #ffcccc;")
+
+    def on_row_submit(self, row_data, team, index):
+        # Called when Enter is pressed in Equipment ID field.
+        player_id = row_data[0].text().strip()
+        equip_id = row_data[2].text().strip()
         if player_id and equip_id:
             # If both fields are found, run this logic.
             print(f"[{team}] SUCCESS - Player: {player_id}, Equipment: {equip_id}, Player Index: {index}")
 
             # TODO: fix the direct assignment
             self.udp.broadcast_equipment_id(equip_id)
-
-            # Reset style in case ERROR correction by user.
-            row_data[0].setStyleSheet("color: black;")
-            row_data[1].setStyleSheet("color: black;")
+            
         else:
             # If both fields are not found, run error logic and graphically prompt user.
             print(f"[{team}] ERROR: Both fields are required for this row.")
             if not player_id:
-                row_data[0].setStyleSheet("border: 1px solid yellow; background-color: #ffcccc; color: black;")
+                row_data[0].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
             if not equip_id:
-                row_data[1].setStyleSheet("border: 1px solid yellow; background-color: #ffcccc; color: black;")
+                row_data[2].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
 
 class RedTeamPanel(QWidget):
     def paintEvent(self, event):
@@ -160,15 +295,15 @@ class RedTeamPanel(QWidget):
         # Draw a dark red rectangle that fills this specific widget.
         painter.setBrush(QBrush(QColor(100, 0, 0, 127)))
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawRect(self.rect())
+        painter.drawRoundedRect(self.rect(), 20, 20)
 
 class GreenTeamPanel(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
-        # Draw a green rectangle that fills this specific widget.
-        painter.setBrush(QBrush(QColor(0, 100, 0, 127))) # Dark Green
+        # Draw a dark green rectangle that fills this specific widget.
+        painter.setBrush(QBrush(QColor(0, 100, 0, 127)))
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawRect(self.rect())
+        painter.drawRoundedRect(self.rect(), 20, 20)
 
 global_main_window = None
 # Allows main window reference to stay alive
@@ -184,6 +319,7 @@ def main():
     # TODO: make a query to the operator on the user interface instead
     receive_ip = input("Enter UDP receive IP (default 0.0.0.0): ") or "0.0.0.0"
     broadcast_ip = input("Enter UDP broadcast IP (default 255.255.255.255): ") or "255.255.255.255"
+
 
     udp = UDPServer(
         receive_ip=receive_ip,
@@ -205,4 +341,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

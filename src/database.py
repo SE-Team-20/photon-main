@@ -12,7 +12,7 @@ from constants import (
   MAX_NUM_PLAYER,
   NUM_TEAM
 )
-# TODO: fix all
+
 class DB:
   def __init__(self):
     try:
@@ -92,11 +92,8 @@ class DB:
     self._ensure_db()
     if not validIndex(team_id, NUM_TEAM):
       return False
-    
-    # 1. get an array (player_id is a dummy slot replaced with a rank)
     lb=team_id*MAX_NUM_PLAYER
     ub=lb+MAX_NUM_PLAYER
-
     self._safe_exec(sql.SQL(
       '''
       SELECT player_id, codename, score
@@ -110,18 +107,13 @@ class DB:
       sql.Literal(lb),
       sql.Literal(ub)
     ))
-    
     rows=self.cur.fetchall()
     if not rows:
       return []
-
-    # 2. write a rank and return the set of tuples
     res=[list(r) for r in rows]
-
     res[0][0]= 1
     for i in range(1, len(res)):
       res[i][0]= res[i-1][0] if res[i][2]==res[i-1][2] else i+1
-    
     return [tuple(r) for r in res]
   
   # TODO: returns a player ID

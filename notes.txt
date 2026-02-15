@@ -1,0 +1,9 @@
+Photon-Main — Quick Run Instructions
+    1. Make scripts executable:
+    chmod +x install.sh run.sh
+
+    2. Install software:
+    ./install.sh
+
+    3. Launch main program:
+    ./run.sh
