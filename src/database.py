@@ -62,6 +62,20 @@ class DB:
     self.cur=None
     self.conn=None
 
+  def isRegistered(self, playerID: int) :
+    self._safe_exec(sql.SQL(
+      '''
+      SELECT EXISTS (
+        SELECT 1
+        from players
+        WHERE codename = :{}
+      )
+      '''      
+    ).format(
+      sql.Literal(playerID)
+    ))
+
+    return self.cur.rowcount==1
 
   # returns a tuple of {rank, codename, score} in non-decreasing order
   def get_leaderboard(self, team_id:int):
