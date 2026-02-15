@@ -45,3 +45,9 @@ by 15th
 - PyQt6
 - Postgre Sequel
 - UDP Sockets
+
+## GitHub Contributors
+- aliibek : Mukhammadali Madaminov
+- sultaniwahid240-cell : Wahid Sultani
+- thoma-sH : Thomas Hamilton
+- TrueRyoB : Ryoji Araki
