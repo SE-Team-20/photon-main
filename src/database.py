@@ -12,7 +12,7 @@ from constants import (
   MAX_NUM_PLAYER,
   NUM_TEAM
 )
-# TODO: fix all
+
 class DB:
   def __init__(self):
     try:
@@ -51,7 +51,6 @@ class DB:
   # Scheme "player ID - codename - team ID - score"
   def _create_table(self):
     self._ensure_db()
-
     self._safe_exec(sql.SQL(
       '''
       CREATE TABLE IF NOT EXISTS players (
@@ -72,10 +71,7 @@ class DB:
     self._ensure_db()
     if not validIndex(team_id, NUM_TEAM):
       return False
-    
-    # disable the row if the codename is at size 0
     registered = "TRUE" if len(codename)>0 else "FALSE"
-
     self._safe_exec(sql.SQL(
       '''
       UPDATE players
@@ -97,10 +93,7 @@ class DB:
     self._ensure_db()
     if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
       return False
-    
     idx=self._get_index(player_id, team_id)
-
-    # 1. get the current score
     self._safe_exec(sql.SQL(
       '''
       SELECT score
@@ -111,14 +104,10 @@ class DB:
     ).format(
       sql.Literal(idx)
     ))
-
     row=self.cur.fetchone()
     if row is None:
       return False
-
-    # 2. apply the change
     new_score=row[0]+diff
-
     self._safe_exec(sql.SQL(
       '''
       UPDATE players
@@ -136,11 +125,8 @@ class DB:
     self._ensure_db()
     if not validIndex(team_id, NUM_TEAM):
       return False
-    
-    # 1. get an array (player_id is a dummy slot replaced with a rank)
     lb=team_id*MAX_NUM_PLAYER
     ub=lb+MAX_NUM_PLAYER
-
     self._safe_exec(sql.SQL(
       '''
       SELECT player_id, codename, score
@@ -154,24 +140,18 @@ class DB:
       sql.Literal(lb),
       sql.Literal(ub)
     ))
-    
     rows=self.cur.fetchall()
     if not rows:
       return []
-
-    # 2. write a rank and return the set of tuples
     res=[list(r) for r in rows]
-
     res[0][0]= 1
     for i in range(1, len(res)):
       res[i][0]= res[i-1][0] if res[i][2]==res[i-1][2] else i+1
-    
     return [tuple(r) for r in res]
   
   # returns a pair of {team_id, player_id} 
   def get_player_info(self, equip_id: int):
     self._ensure_db()
-
     self._safe_exec(sql.SQL(
       '''
       SELECT player_id
@@ -181,20 +161,15 @@ class DB:
     ).format(
       sql.Literal(equip_id)
     ))
-
     idx=self.cur.fetchone()
     if idx is None or not validIndex(idx, NUM_TEAM*MAX_NUM_PLAYER):
       return False
-
     return [idx/MAX_NUM_PLAYER, idx%MAX_NUM_PLAYER]
   
   def assign_equipment(self, player_id:int, team_id:int, equip_id:int):
     self._ensure_db()
-
     if not validIndex(player_id, MAX_NUM_PLAYER) or not validIndex(team_id, NUM_TEAM):
       return False
-
-    # INSERT iff equip_id is yet to be registered
     self._safe_exec(sql.SQL(
       '''
       INSERT INTO equips (equip_id, player_id)
@@ -210,13 +185,11 @@ class DB:
       sql.Literal(self._get_index(player_id, team_id)),
       sql.Literal(equip_id)
     ))
-
     return self.cur.rowcount==1
 
   # remove specific equipment
   def free_equipment(self, equip_id:int):
     self._ensure_db()
-
     self._safe_exec(sql.SQL(
       '''
       DELETE FROM equips
@@ -225,13 +198,11 @@ class DB:
     ).format(
       sql.Literal(equip_id)
     ))
-
     return self.cur.rowcount==1
 
   # remove all rows
   def clear_equips(self):
     self._ensure_db()
-
     self._safe_exec(sql.SQL(
       '''
       TRUNCATE TABLE equips;
@@ -242,7 +213,6 @@ class DB:
   # set every row invalid
   def clear_players(self):
     self._ensure_db()
-
     self._safe_exec(sql.SQL(
       '''
       UPDATE players
@@ -250,3 +220,52 @@ class DB:
       '''
     ))
     return self.cur.rowcount==1
+
+  def get_player_codename(self, player_id: int):
+      self._ensure_db()
+      total_slots = NUM_TEAM * MAX_NUM_PLAYER
+      if not validIndex(player_id, total_slots):
+          return False
+      query = sql.SQL(
+          "SELECT codename FROM players WHERE player_id = {};"
+      ).format(sql.Literal(player_id))
+      if not self._safe_exec(query):
+          return False
+      row = self.cur.fetchone()
+      if row is None:
+          return None
+      return row[0]
+
+  def add_player(self, player_id: int, codename: str):
+      self._ensure_db()
+      registered = len(codename) > 0
+      query = sql.SQL(
+          '''
+          INSERT INTO players (player_id, codename, is_registered, score)
+          VALUES ({}, {}, {}, 0);
+          '''
+      ).format(
+          sql.Literal(player_id),
+          sql.Literal(codename),
+          sql.Literal(registered)
+      )
+      return self._safe_exec(query)
+
+  def _get_index(self, player_id: int, team_id: int) -> int:
+      return team_id * MAX_NUM_PLAYER + player_id
+
+# These use a global DB instance so we can call database.get_player_codename(...)
+
+_db_instance = None
+
+def _get_db():
+    global _db_instance
+    if _db_instance is None:
+        _db_instance = DB()
+    return _db_instance
+
+def get_player_codename(player_id: int):
+    return _get_db().get_player_codename(player_id)
+
+def add_player(player_id: int, codename: str):
+    return _get_db().add_player(player_id, codename)

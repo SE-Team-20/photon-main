@@ -1,5 +1,6 @@
 import sys
 import time
+import database
 from PyQt6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
@@ -166,6 +167,7 @@ class MainWindow(QMainWindow):
             player_id_edit = QLineEdit()
             codename_edit = QLineEdit()
             equipment_id_edit = QLineEdit()
+            codename_edit.setReadOnly(True)
             for entry in (player_id_edit, codename_edit, equipment_id_edit):
                 entry.setFixedSize(80, 20)
                 entry.setStyleSheet(cool_font)
@@ -177,6 +179,10 @@ class MainWindow(QMainWindow):
             # Player ID entry
             player_id_edit.returnPressed.connect(
                 lambda r=row_data, t=team_name, idx=row-1: self.on_player_id_enter(r, t, idx)
+            )
+            # Codename entry
+            codename_edit.returnPressed.connect(
+                lambda r=row_data, t=team_name, idx=row-1: self.on_codename_enter(r, t, idx)
             )
             # Equipment ID entry
             equipment_id_edit.returnPressed.connect(
@@ -201,27 +207,68 @@ class MainWindow(QMainWindow):
         if player_id:
             # Show player number
             index_labels[index].setText(f"Player #{index+1}")
+
+            # Convert to int as database expects integer
+            try:
+                player_id = int(player_id)
+            except ValueError:
+                return
+
+            # Query the database
+            codename = database.get_player_codename(player_id)
+
+            if codename is not None and codename is not False:
+                # fill the codename and move to equipment
+                row_data[1].setText(codename)
+                row_data[1].setReadOnly(True)
+                row_data[1].setStyleSheet("color: black;")
+                row_data[1].setPlaceholderText("")
+                row_data[2].setFocus()
+            else:
+                # Player not found, new player entry
+                row_data[1].clear()
+                row_data[1].setReadOnly(False)
+                row_data[1].setPlaceholderText("Enter codename for new player")
+                row_data[1].setStyleSheet("color: gray;")
+                row_data[1].setFocus()
         else:
-            # Clear player number if field is empty
+            # Clear the number label and codename field
             index_labels[index].setText("")
+            row_data[1].clear()
+            row_data[1].setReadOnly(True)
+            row_data[1].setPlaceholderText("")
 
-        # Look up codename by passing player_id to readRecord function to database file,
-        # database file returns the readRecord, if player id not found, addRecord
+    def on_codename_enter(self, row_data, team, index):
+        # Called when Enter is pressed in the codename field
+        # If both Player ID and codename are non‑empty, attempts to add the player to the database.
+        # If successful, moves focus to Equipment ID.
+        # If the player already exists return false
+        if row_data[1].isReadOnly():
+            return
 
-        # MOCK EXAMPLE BELOW
+        player_id_text = row_data[0].text().strip()
+        codename = row_data[1].text().strip()
 
-        # codename = readRecord(player_id)
-        # if codename:
-        #     row_data[1].setText(codename)
-        #     row_data[1].setStyleSheet("color: black")
-        #     # Move focus to Equipment ID for faster entry
-        #     row_data[2].setFocus()
-        # else:
-        #     Player ID not found
-        #     Prompt above codename column "Add new Player!"
-        #     Allow user entry into codename
-        #     Upon the user pressing enter, add that player id and codename to the database
-        #     Move focus to Equipment ID
+        if not player_id_text or not codename:
+            return
+
+        try:
+            player_id = int(player_id_text)
+        except ValueError:
+            return  # Invalid ID – ignore
+
+        # Attempt to add the new player
+        success = database.add_player(player_id, codename)
+
+        if success:
+            # Player added – update style and move to equipment
+            row_data[1].setReadOnly(True)
+            row_data[1].setStyleSheet("color: black;")
+            row_data[1].setPlaceholderText("")
+            row_data[2].setFocus()
+        else:
+            # Addition failed (likely because player already exists) – indicate error
+            row_data[1].setStyleSheet("border: 1px solid red; background-color: #ffcccc;")
 
     def on_row_submit(self, row_data, team, index):
         # Called when Enter is pressed in Equipment ID field.
