@@ -317,8 +317,8 @@ def show_main_window(splash_screen, udp):
 def main():
     # Fetching UDP info
     # TODO: make a query to the operator on the user interface instead
-    receive_ip = input("Enter UDP receive IP (default 0.0.0.0): ") or "0.0.0.0"
-    broadcast_ip = input("Enter UDP broadcast IP (default 255.255.255.255): ") or "255.255.255.255"
+    receive_ip = "0.0.0.0" if isDevMode() else input("Enter UDP receive IP (default 0.0.0.0): ") or "0.0.0.0"
+    broadcast_ip = "255.255.255.255" if isDevMode() else  input("Enter UDP broadcast IP (default 255.255.255.255): ") or "255.255.255.255"
 
 
     udp = UDPServer(
