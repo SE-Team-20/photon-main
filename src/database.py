@@ -57,6 +57,9 @@ class GameManager:
 
 class DB:
   def __init__(self):
+    if isDevMode():
+      print("warning: database connection is temporarily disabled")
+      return
 
     try:
       self.conn = psycopg2.connect(**readConfig(DBINIT_PATH, DBINIT_SEC))
