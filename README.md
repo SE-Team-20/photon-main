@@ -48,17 +48,17 @@ chmod +x install.sh run.sh
 ## TODOs (week 2)
 by February 10th
 - [x] create splash screen (Thomas)
-- [ ] create player entry screen (Thomas)
+- [x] create player entry screen (Thomas)
 - [ ] link database to application (RyoB)
 - [ ] add two players via application
-- [ ] set up UDP sockets, broadcast equipment codes
+- [x] set up UDP sockets, broadcast equipment codes
 - [ ] have option to select different network for UDP sockets
 
 --- 
 by 15th
-- [ ] include an install script to the repository
-- [ ] modify this readme to include the install instruction
-- [ ] enhance README
+- [x] include an install script to the repository
+- [x] modify this readme to include the install instruction
+- [x] enhance README
 
 
 
