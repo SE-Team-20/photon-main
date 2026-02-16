@@ -45,23 +45,6 @@ chmod +x install.sh run.sh
 </tr>
 </table>
 
-## TODOs (week 2)
-by February 10th
-- [x] create splash screen (Thomas)
-- [x] create player entry screen (Thomas)
-- [ ] link database to application (RyoB)
-- [ ] add two players via application
-- [x] set up UDP sockets, broadcast equipment codes
-- [ ] have option to select different network for UDP sockets
-
---- 
-by 15th
-- [x] include an install script to the repository
-- [x] modify this readme to include the install instruction
-- [x] enhance README
-
-
-
 ## Tech stacks
 - Python
 - PyQt6
