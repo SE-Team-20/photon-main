@@ -13,8 +13,30 @@ from constants import (
   NUM_TEAM
 )
 
+class UnionFind:
+  def __init__(self, registered):
+    self.root = {}
+    for x in registered:
+      self.root[x]=x
+    for x in registered:
+      self.root[x]=self.find(x+1)
+
+  def find(self, x=0) -> int:
+    if x not in self.root:
+      return x
+    if self.root[x]!=x:
+      self.root[x]=self.find(self.root[x])
+    return self.root[x]
+  
+  def use(self, x: int) -> bool:
+    if x in self.root:
+      return False
+    self.root[x]=self.find(x+1)
+    return True
+
 class DB:
   def __init__(self):
+
     try:
       self.conn = psycopg2.connect(**readConfig(DBINIT_PATH, DBINIT_SEC))
       self.cur = self.conn.cursor()
@@ -23,6 +45,7 @@ class DB:
       self.conn=None
       self.cur=None
     self._create_table()
+    self.uf = UnionFind(self.getAllPlayerID())
     if isDevMode():
       print("dev: DB connection succeeded")
   
@@ -53,6 +76,16 @@ class DB:
       );
      '''
     ))
+  
+  def _getAllPlayerID(self):
+    self._safe_exec(
+    '''
+    SELECT player_id
+    from players
+    WHERE is_registered;
+    '''
+    )
+    return [row[0] for row in self.cur.fetchall()]
 
   def close(self):
     if self.cur:
@@ -76,6 +109,11 @@ class DB:
     ))
 
     return self.cur.rowcount==1
+
+  def findNewPlayerID(self, playerID: int):
+    if self.uf is None: 
+      return False
+    return self.uf.find()
 
   # returns a tuple of {rank, codename, score} in non-decreasing order
   def get_leaderboard(self, team_id:int):
