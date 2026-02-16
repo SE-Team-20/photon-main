@@ -45,7 +45,7 @@
 </tr>
 <tr>
  <td>showTable()</td>
- <td>debug: prints a full set of registered player information to the CLI</td>
+ <td>debug: prints a full list of player infor registered to the database table on the CLI</td>
  <td></td>
  <td>True / False</td>
 </tr>
