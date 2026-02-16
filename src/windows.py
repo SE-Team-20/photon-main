@@ -18,6 +18,8 @@ from udp_server import UDPServer
 from PyQt6.QtGui import QGuiApplication, QPainter, QBrush, QColor
 from PyQt6.QtCore import Qt
 
+from util import isDevMode
+
 from constants import (
     BLURRED_LOGO
 )
@@ -305,6 +307,7 @@ class MainWindow(QMainWindow):
 
             # enable the input field iff the player ID is entered and the database does not have it
             codename_edit.setReadOnly(True)
+            equipment_id_edit.setReadOnly(True)
             
             player_entry_grid.addWidget(player_id_edit, row, 1)
             player_entry_grid.addWidget(codename_edit, row, 2)
@@ -334,99 +337,120 @@ class MainWindow(QMainWindow):
     def on_player_id_enter(self, row_data, team, index):
         player_id = row_data[0].text().strip()
 
-        if team == "RED":
-            index_labels = self.red_index_labels
-        else:
-            index_labels = self.green_index_labels
+        index_labels = self.red_index_labels if team=="RED" else self.green_index_labels
 
-        if player_id:
-            # Show player number
-            index_labels[index].setText(f"Player #{index+1}")
-
-            # Convert to int
-            try:
-                player_id = int(player_id)
-            except ValueError:
-                return
-
-            # Query if the player ID is registered already
-            codename = self.db.isRegistered(player_id)
-
-            if codename is not False:
-                # fill the codename and move to equipment
-                row_data[1].setText(codename)
-                row_data[1].setReadOnly(True)
-                row_data[1].setStyleSheet("color: black;")
-                row_data[1].setPlaceholderText("")
-                row_data[2].setFocus()
-            else:
-                # TODO: clear the input field instead
-                # Player not found, new player entry
-                row_data[1].clear()
-                row_data[1].setReadOnly(False)
-                row_data[1].setPlaceholderText("Enter codename for new player")
-                row_data[1].setStyleSheet("color: gray;")
-                row_data[1].setFocus()
-        else:
-            # Clear the number label and codename field
+        # clear the label
+        if not player_id:
             index_labels[index].setText("")
             row_data[1].clear()
             row_data[1].setReadOnly(True)
             row_data[1].setPlaceholderText("")
+            return
+        
+        # Convert to integer
+        try:
+            player_id = int(player_id)
+        except ValueError:
+            print(f"Error: player_id must be integer: {player_id}")
+            return
+        
+        # Visual update
+        index_labels[index].setText(f"Player #{index+1}")
 
-    # TODO: assume player ID is blank
+        # Query if the player ID is registered already
+        codename = False if isDevMode() else self.db.isRegistered(player_id)
+
+        if codename:
+            # fill the codename and move to equipment
+            row_data[1].setText(codename)
+            row_data[1].setReadOnly(False)
+            row_data[1].setStyleSheet("color: black;")
+            row_data[1].setPlaceholderText("")
+            row_data[2].setReadOnly(False)
+            row_data[2].setFocus()
+        else:
+            # open up the availability to edit
+            row_data[1].clear()
+            row_data[1].setReadOnly(False)
+            row_data[1].setPlaceholderText("Enter codename for new player")
+            row_data[1].setStyleSheet("color: gray;")
+            row_data[1].setFocus()
+
+    # Change the codename corresponding to the player ID if registered
     def on_codename_enter(self, row_data, team, index):
-        # Called when Enter is pressed in the codename field
-        # If both Player ID and codename are non‑empty, attempts to add the player to the database.
-        # If successful, moves focus to Equipment ID.
-        # If the player already exists return false
         if row_data[1].isReadOnly():
             return
 
         player_id_text = row_data[0].text().strip()
         codename = row_data[1].text().strip()
 
+        # ignore if blank
         if not player_id_text or not codename:
+            row_data[2].setReadOnly(True)
             return
 
+        # Ignore when invalid ID
         try:
             player_id = int(player_id_text)
         except ValueError:
-            return  # Invalid ID – ignore
+            return 
 
         # Attempt to add the new player
-        # success = self.db.invalidOperation(player_id, codename)
-        success=False
+        if isDevMode():
+            print("Error: we cannot proceed with database connection when isDevMode is active.")
+            row_data[2].setReadOnly(False)
+            return
+        
+        isRegistered = self.db.isRegistered()
+
+        # different methods (update if existing / add new if new)
+        success = self.db.updateCodename(player_id, codename) if isRegistered else self.db.usePlayerID(player_id, codename)
 
         if success:
             # Player added – update style and move to equipment
-            row_data[1].setReadOnly(True)
+            row_data[2].setReadOnly(False)
             row_data[1].setStyleSheet("color: black;")
             row_data[1].setPlaceholderText("")
             row_data[2].setFocus()
         else:
-            # Addition failed (likely because player already exists) – indicate error
+            print("Failed registering the new codename to the player ID on database")
             row_data[1].setStyleSheet("border: 1px solid red; background-color: #ffcccc;")
 
+    # broadcast the equipment ID if successful
     def on_row_submit(self, row_data, team, index):
-        # Called when Enter is pressed in Equipment ID field.
         player_id = row_data[0].text().strip()
         equip_id = row_data[2].text().strip()
-        if player_id and equip_id:
-            # If both fields are found, run this logic.
-            print(f"[{team}] SUCCESS - Player: {player_id}, Equipment: {equip_id}, Player Index: {index}")
 
-            # TODO: fix the direct assignment
-            self.udp.broadcast_equipment_id(equip_id)
-            
-        else:
-            # If both fields are not found, run error logic and graphically prompt user.
+        # ignore if invalid data type for equip ID
+        try:
+            equip_id = int(equip_id)
+        except ValueError:
+            row_data[2].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
+            return
+        
+
+        # check parity for team ID (red odd, green even)
+        if team=="RED" and equip_id%2==0 or team=="GREEN" and equip_id%2==1:
+            print("Error: wrong equipment ID parity for the team color")
+            row_data[2].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
+            return
+        
+        # if the previous input field remains blank
+        if not player_id or not equip_id:
             print(f"[{team}] ERROR: Both fields are required for this row.")
             if not player_id:
                 row_data[0].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
             if not equip_id:
                 row_data[2].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
+            return
+        
+        # Connects to database and register the in-game info
+        if not isDevMode() and self.db.addPlayerNextGame(player_id, 0 if team=="RED" else 1, equip_id):
+            print(f"[{team}] SUCCESS - Player: {player_id}, Equipment: {equip_id}, Player Index: {index}")
 
+        row_data[2].setStyleSheet("color: black; font-weight: bold; font-size: 12px;")
+        self.udp.broadcast_equipment_id(equip_id)
+            
 
 class RedTeamPanel(QWidget):
     def paintEvent(self, event):
