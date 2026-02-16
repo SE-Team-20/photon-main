@@ -2,17 +2,22 @@
 [quick link to the main branch](https://github.com/SE-Team-20/photon-main/tree/main)
 
 ## Quick Run Instructions (Linux)
-1. Make scripts executable:
+1. Fix line endings
+```
+sed -i 's/\r$//' install.sh run.sh
+```
+
+2. Make scripts executable:
 ```
 chmod +x install.sh run.sh
 ```
 
-2. Install software:
+3. Install software:
 ```
 ./install.sh
 ```
 
-3. Launch main program:
+4. Launch main program:
 ```
 ./run.sh
 ```
