@@ -1,6 +1,7 @@
 import sys
 import time
 import database
+import socket
 from PyQt6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
@@ -12,7 +13,12 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QGridLayout,
     QGraphicsDropShadowEffect,
+    QFrame,
+    QMessageBox,
+    QPushButton,
+    QFormLayout,
 )
+
 from PyQt6.QtGui import QPixmap, QGuiApplication, QPainter, QBrush, QColor
 from PyQt6.QtCore import Qt, QTimer, QSize
 from constants import (
@@ -27,6 +33,128 @@ from udp_server import UDPServer
 
 # TODO:
 # using a class for each UI element for its declarative nature and data binding
+
+class UDPConfigWindow(QWidget):
+    def __init__(self, window_size):
+        super().__init__()
+
+        self.setWindowTitle("Photon - Network Configuration")
+        self.resize(window_size)
+        self.setObjectName("ConfigWindow")
+
+        # ---------- Style ----------
+        self.setStyleSheet("""
+            #ConfigWindow {
+                background-color: black;
+            }
+
+            QLabel {
+                color: white;
+                font-family: Arial;
+                font-size: 14px;
+            }
+
+            QLineEdit {
+                background-color: rgba(0, 0, 0, 180);
+                border: 1px solid #555;
+                padding: 8px;
+                border-radius: 6px;
+                color: white;
+                font-size: 14px;
+                min-width: 220px;
+            }
+
+            QPushButton {
+                background-color: #b30000;
+                padding: 10px 25px;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 16px;
+                color: white;
+            }
+
+            QPushButton:hover {
+                background-color: #e60000;
+            }
+        """)
+
+        # ---------- Layout ----------
+        layout = QVBoxLayout(self)
+        layout.addStretch()
+
+        title = QLabel("UDP Network Setup")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setStyleSheet("font-size: 22px; font-weight: bold;")
+        layout.addWidget(title)
+
+        form = QFormLayout()
+        form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+
+        # Only 2 inputs (as required)
+        self.receive_input = QLineEdit("0.0.0.0")
+        self.broadcast_input = QLineEdit("127.0.0.1")
+
+        form.addRow("Receive IP:", self.receive_input)
+        form.addRow("Broadcast IP:", self.broadcast_input)
+
+        layout.addLayout(form)
+        layout.addSpacing(20)
+
+        self.start_button = QPushButton("Start System")
+        self.start_button.clicked.connect(self.start_system)
+        layout.addWidget(self.start_button, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        layout.addStretch()
+
+        self.main_window = None
+
+    # ---------- Validate IPv4 ----------
+    def validate_ip(self, ip):
+        try:
+            socket.inet_aton(ip)
+            return True
+        except socket.error:
+            return False
+
+    # ---------- Start System ----------
+    def start_system(self):
+        receive_ip = self.receive_input.text().strip()
+        broadcast_ip = self.broadcast_input.text().strip()
+
+        # Check empty first
+        if not receive_ip or not broadcast_ip:
+            QMessageBox.warning(
+                self,
+                "Missing Input",
+                "Please enter both Receive IP and Broadcast IP."
+            )
+            return
+
+        # Validate IP format
+        if not self.validate_ip(receive_ip):
+            QMessageBox.warning(self, "Invalid IP", "Receive IP is not valid.")
+            return
+
+        if not self.validate_ip(broadcast_ip):
+            QMessageBox.warning(self, "Invalid IP", "Broadcast IP is not valid.")
+            return
+
+        try:
+            udp = UDPServer(
+                receive_ip=receive_ip,
+                broadcast_ip=broadcast_ip
+            )
+        except OSError:
+            QMessageBox.warning(
+                self,
+                "Network Error",
+                "Unable to bind to the specified IP address."
+            )
+            return
+
+        self.main_window = MainWindow(udp)
+        self.main_window.show()
+        self.close()
 
 
 # Above are all helper classes needed from PyQt6 for this project, so far.
@@ -314,30 +442,56 @@ def show_main_window(splash_screen, udp):
     global_main_window.show()
     splash_screen.finish(global_main_window)
 
+# def main():
+#     # Fetching UDP info
+#     # TODO: make a query to the operator on the user interface instead
+#     receive_ip = input("Enter UDP receive IP (default 0.0.0.0): ") or "0.0.0.0"
+#     broadcast_ip = input("Enter UDP broadcast IP (default 255.255.255.255): ") or "255.255.255.255"
+
+
+#     udp = UDPServer(
+#         receive_ip=receive_ip,
+#         broadcast_ip=broadcast_ip
+#     )
+
+#     app = QApplication(sys.argv)
+#     screen_size = QGuiApplication.primaryScreen().size()/2
+#     # set application to scale according to user screen size
+#     pixmap = QPixmap(f"{LOGO}").scaled(QSize(screen_size))
+#     splash = QSplashScreen(pixmap, Qt.WindowType.WindowStaysOnTopHint)
+#     # Ensure window splashes on top of all other applications on start up
+#     splash.show()
+#     app.processEvents()
+#     # TODO: fix a direct assignment of UDP
+#     QTimer.singleShot(0 if isDevMode() else 3000, lambda: show_main_window(splash, udp))
+#     # After 3 seconds, run show main window.
+#     sys.exit(app.exec())
+
+# test main
 def main():
-    # Fetching UDP info
-    # TODO: make a query to the operator on the user interface instead
-    receive_ip = input("Enter UDP receive IP (default 0.0.0.0): ") or "0.0.0.0"
-    broadcast_ip = input("Enter UDP broadcast IP (default 255.255.255.255): ") or "255.255.255.255"
-
-
-    udp = UDPServer(
-        receive_ip=receive_ip,
-        broadcast_ip=broadcast_ip
-    )
-
     app = QApplication(sys.argv)
-    screen_size = QGuiApplication.primaryScreen().size()/2
-    # set application to scale according to user screen size
+
+    # Splash Screen
+    screen_size = QGuiApplication.primaryScreen().size() / 2
     pixmap = QPixmap(f"{LOGO}").scaled(QSize(screen_size))
     splash = QSplashScreen(pixmap, Qt.WindowType.WindowStaysOnTopHint)
-    # Ensure window splashes on top of all other applications on start up
     splash.show()
     app.processEvents()
-    # TODO: fix a direct assignment of UDP
-    QTimer.singleShot(0 if isDevMode() else 3000, lambda: show_main_window(splash, udp))
-    # After 3 seconds, run show main window.
+
+    def show_config():
+        splash.close()
+        config = UDPConfigWindow(splash.size())
+        # config.resize(splash.size())
+        config.show()
+
+        # Keep reference alive
+        global global_main_window
+        global_main_window = config
+
+    QTimer.singleShot(0 if isDevMode() else 2500, show_config)
+
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()

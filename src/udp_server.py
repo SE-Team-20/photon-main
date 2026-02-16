@@ -8,8 +8,8 @@ BUFFER_SIZE = 1024
 class UDPServer:
     def __init__(
         self,
-        receive_ip=DEFAULT_RECEIVE_IP,
-        broadcast_ip=DEFAULT_BROADCAST_IP
+        receive_ip,
+        broadcast_ip
     ):
         self.receive_ip = receive_ip
         self.broadcast_ip = broadcast_ip
