@@ -205,6 +205,24 @@ class DB:
     print("---------")
     return True
 
+  def updateCodename(self, playerID: int, codename: str):
+    self._safe_exec(sql.SQL(
+      '''
+      UPDATE players
+      SET codename = {}
+      WHERE player_id = {}
+        AND is_registered;
+      '''
+    ).format(
+      sql.Literal(codename),
+      sql.Literal(playerID)
+    ))
+
+    if self.cur.rowcount==0:
+      return False
+
+    return True
+
   # returns a tuple of {rank, codename, score} in non-decreasing order
   def get_leaderboard(self, team_id:int):
     self._ensure_db()
