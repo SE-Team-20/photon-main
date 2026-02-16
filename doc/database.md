@@ -33,8 +33,14 @@
 </tr>
 <tr>
  <td>usePlayerID()</td>
- <td>succeeds if the input ID is yet to be registered to the database</td>
+ <td>add new player info to the permanent database; succeeds iff the input ID is yet to be registered to the database</td>
  <td>player ID, codename</td>
+ <td>True / False</td>
+</tr>
+<tr>
+ <td>addPlayerNextGame()</td>
+ <td>succeeds iff the player ID is registered to the database</td>
+ <td>player ID, team ID, equipment ID</td>
  <td>True / False</td>
 </tr>
 <tr>
