@@ -34,7 +34,7 @@
 <tr>
  <td>usePlayerID()</td>
  <td>succeeds if the input ID is yet to be registered to the database</td>
- <td>player ID, codename, team ID</td>
+ <td>player ID, codename</td>
  <td>True / False</td>
 </tr>
 <tr>

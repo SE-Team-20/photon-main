@@ -114,6 +114,32 @@ class DB:
     if self.uf is None: 
       return False
     return self.uf.find()
+  
+  def usePlayerID(self, playerID: int, codename: str):
+    if self.uf is None:
+      return False
+    res = self.uf.use(playerID)
+
+    if not res:
+      return False
+    
+    self._safe_exec(sql.SQL(
+    '''
+    INSERT INTO players (
+      plaer_id,
+      codename,
+      highscore,
+      playcnt,
+      is_registered
+    )
+    VALUES ({}, {}, 0, 0, TRUE);
+    '''
+    ).format(
+      sql.Literal(playerID),
+      sql.Literal(codename)
+    ))
+
+    return True
 
   # returns a tuple of {rank, codename, score} in non-decreasing order
   def get_leaderboard(self, team_id:int):
