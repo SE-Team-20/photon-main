@@ -109,6 +109,24 @@ class DB:
     )
     return [row[0] for row in self.cur.fetchall()]
 
+  def _getBasicPlayerInfo(self, playerID: int):
+    self._safe_exec(sql.SQL(
+      '''
+      SELECT player_id, codename, highscore
+      from players
+      WHERE player_id = {};
+      '''
+    ).format(
+      sql.Literal(playerID)
+    ))
+    
+    row=self.cur.fetchone()
+
+    if row is None:
+      return False
+    
+    return [row[0], row[1] if row[1] is not None else "", row[2] if row[2] is not None else 0]
+
   def close(self):
     if self.cur:
       self.cur.close()
@@ -123,7 +141,7 @@ class DB:
       SELECT EXISTS (
         SELECT 1
         from players
-        WHERE codename = :{}
+        WHERE codename = {};
       )
       '''      
     ).format(
@@ -167,6 +185,22 @@ class DB:
     if self.gm is None or not self.isRegistered(playerID):
       return False
     return self.gm.addPlayer(playerID, teamID, equipID)
+  
+  def showTable(self):
+    print("--- all players registered in the database ---")
+    for pid in self._getAllPlayerID():
+      info = self._getBasicPlayerInfo(pid)
+
+      if not info:
+        print(f"Failed _getBasicPlayerInfo({info})")
+        return False
+      print(
+        f"ID: {info[0]},"
+        f"codename: {info[1]}"
+        f"highscore: {info[2]}"
+      )
+    print("---------")
+    return True
 
   # returns a tuple of {rank, codename, score} in non-decreasing order
   def get_leaderboard(self, team_id:int):
