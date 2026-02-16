@@ -1,6 +1,6 @@
 import sys
 import time
-import database
+from database import DB
 from PyQt6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
@@ -33,7 +33,7 @@ from udp_server import UDPServer
 class MainWindow(QMainWindow):
     # TODO: fix a direct assignment as View and Model should be separated
     # should be resolved by passing a data reference to udp_server from the main function
-    def __init__(self, udp_server):
+    def __init__(self, udp_server, db):
         super().__init__()
 
         # Make the file display in front of any other apps
@@ -42,6 +42,7 @@ class MainWindow(QMainWindow):
         )
 
         self.udp = udp_server
+        super.db = db
 
         self.setWindowTitle("PHOTON")
 
@@ -208,7 +209,7 @@ class MainWindow(QMainWindow):
 
     def on_player_id_enter(self, row_data, team, index):
         # Called when Enter is pressed in a Player ID field.
-        # Looks up the codename from the database and fills the Codename field.
+        # Looks up the codename and fills the Codename field.
         player_id = row_data[0].text().strip()
 
         if team == "RED":
@@ -220,16 +221,16 @@ class MainWindow(QMainWindow):
             # Show player number
             index_labels[index].setText(f"Player #{index+1}")
 
-            # Convert to int as database expects integer
+            # Convert to int
             try:
                 player_id = int(player_id)
             except ValueError:
                 return
 
-            # Query the database
-            codename = database.get_player_codename(player_id)
+            # Query if the player ID is registered already
+            codename = self.db.isRegistered(player_id)
 
-            if codename is not None and codename is not False:
+            if codename is not False:
                 # fill the codename and move to equipment
                 row_data[1].setText(codename)
                 row_data[1].setReadOnly(True)
@@ -237,6 +238,7 @@ class MainWindow(QMainWindow):
                 row_data[1].setPlaceholderText("")
                 row_data[2].setFocus()
             else:
+                # TODO: clear the input field instead
                 # Player not found, new player entry
                 row_data[1].clear()
                 row_data[1].setReadOnly(False)
@@ -250,6 +252,7 @@ class MainWindow(QMainWindow):
             row_data[1].setReadOnly(True)
             row_data[1].setPlaceholderText("")
 
+    # TODO: assume player ID is blank
     def on_codename_enter(self, row_data, team, index):
         # Called when Enter is pressed in the codename field
         # If both Player ID and codename are non‑empty, attempts to add the player to the database.
@@ -270,7 +273,8 @@ class MainWindow(QMainWindow):
             return  # Invalid ID – ignore
 
         # Attempt to add the new player
-        success = database.add_player(player_id, codename)
+        # success = self.db.invalidOperation(player_id, codename)
+        success=False
 
         if success:
             # Player added – update style and move to equipment
@@ -320,9 +324,9 @@ class GreenTeamPanel(QWidget):
 global_main_window = None
 # Allows main window reference to stay alive
 
-def show_main_window(splash_screen, udp):
+def show_main_window(splash_screen, udp, db):
     global global_main_window
-    global_main_window = MainWindow(udp)
+    global_main_window = MainWindow(udp, db)
     global_main_window.show()
     splash_screen.finish(global_main_window)
 
@@ -347,7 +351,8 @@ def main():
     splash.show()
     app.processEvents()
     # TODO: fix a direct assignment of UDP
-    QTimer.singleShot(0 if isDevMode() else 3000, lambda: show_main_window(splash, udp))
+    # TODO: fix a direct assignment of DB
+    QTimer.singleShot(0 if isDevMode() else 3000, lambda: show_main_window(splash, udp, DB()))
     # After 3 seconds, run show main window.
     sys.exit(app.exec())
 
