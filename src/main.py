@@ -1,10 +1,9 @@
 import sys
-from database import DB
 from PyQt6.QtWidgets import (
     QApplication,
     QSplashScreen,
 )
-from PyQt6.QtGui import QPixmap, QGuiApplication, QPainter, QBrush, QColor
+from PyQt6.QtGui import QPixmap, QGuiApplication
 from PyQt6.QtCore import Qt, QTimer, QSize
 from constants import (
     LOGO
@@ -12,8 +11,7 @@ from constants import (
 from util import (
     isDevMode
 )
-from udp_server import UDPServer
-from windows import MainWindow, UDPConfigWindow
+from windows import UDPConfigWindow
 
 global_main_window = None
 
