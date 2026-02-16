@@ -23,6 +23,28 @@
 </tr>
 </table>
 
+## Install Instructions
+# 1. Make scripts executable
+chmod +x install.sh run.sh
+
+# 2. Fix line endings if you see "$'\r': command not found"
+sed -i 's/\r$//' install.sh run.sh
+
+# 3. Install dependencies (Python, PostgreSQL, required packages)
+./install.sh
+
+# 4. Run the application
+./run.sh
+
+## TODOs (week 2)
+by February 10th
+- [x] create splash screen (Thomas)
+- [ ] create player entry screen (Thomas)
+- [ ] link database to application (RyoB)
+- [ ] add two players via application
+- [ ] set up UDP sockets, broadcast equipment codes
+- [ ] have option to select different network for UDP sockets
+
 ## TODOs (week 2)
 by February 10th
 - [x] create splash screen (Thomas)
