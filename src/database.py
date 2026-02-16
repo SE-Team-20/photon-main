@@ -34,6 +34,27 @@ class UnionFind:
     self.root[x]=self.find(x+1)
     return True
 
+# 1. holds equip-player and player-team relationship
+# 2. detects equip duplication
+# 3. validates the team state
+class GameManager:
+  def __init__(self):
+    self.equips={}
+    self.players={}
+  def addPlayer(self, playerID:int, teamID:int, equipID:int):
+    # duplicated equipment ID
+    if equipID in self.equips:
+      return False
+    # duplicated player
+    if playerID in self.players:
+      return False
+    
+    self.equips[equipID]=playerID
+    self.players[playerID]=teamID
+
+    return True
+  
+
 class DB:
   def __init__(self):
 
@@ -46,6 +67,7 @@ class DB:
       self.cur=None
     self._create_table()
     self.uf = UnionFind(self.getAllPlayerID())
+    self.gm = GameManager()
     if isDevMode():
       print("dev: DB connection succeeded")
   
@@ -141,7 +163,10 @@ class DB:
 
     return True
 
-  # def addPlayerNextGame
+  def addPlayerNextGame(self, playerID: int, teamID: int, equipID: int):
+    if self.gm is None or not self.isRegistered(playerID):
+      return False
+    return self.gm.addPlayer(playerID, teamID, equipID)
 
   # returns a tuple of {rank, codename, score} in non-decreasing order
   def get_leaderboard(self, team_id:int):
