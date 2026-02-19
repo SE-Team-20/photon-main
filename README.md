@@ -1,7 +1,29 @@
 # Photon main (team 20)
 [quick link to the main branch](https://github.com/SE-Team-20/photon-main/tree/main)
 
-## File organization strategy
+## Quick Run Instructions (Linux)
+1. Fix line endings
+```
+sed -i 's/\r$//' install.sh run.sh
+```
+
+2. Make scripts executable:
+```
+chmod +x install.sh run.sh
+```
+
+3. Install software:
+```
+./install.sh
+```
+
+4. Launch main program:
+```
+./run.sh
+```
+
+
+## File organization
 
 <table>
 <thread>
@@ -22,28 +44,6 @@
  <td>src</td><td>source files (.py)</td>
 </tr>
 </table>
-
-## Install Instructions
-# 1. Make scripts executable
-chmod +x install.sh run.sh
-
-# 2. Fix line endings if you see "$'\r': command not found"
-sed -i 's/\r$//' install.sh run.sh
-
-# 3. Install dependencies (Python, PostgreSQL, required packages)
-./install.sh
-
-# 4. Run the application
-./run.sh
-
-## TODOs (week 2)
-by February 10th
-- [x] create splash screen (Thomas)
-- [ ] create player entry screen (Thomas)
-- [ ] link database to application (RyoB)
-- [ ] add two players via application
-- [ ] set up UDP sockets, broadcast equipment codes
-- [ ] have option to select different network for UDP sockets
 
 ## TODOs (week 2)
 by February 10th
