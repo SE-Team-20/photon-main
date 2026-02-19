@@ -1,4 +1,4 @@
-updated install.sh: #!/bin/bash
+#updated install.sh: #!/bin/bash
 # Photon-Main Automated Installer for Debian VM
 
 set -e  # Stop on error if found
@@ -6,19 +6,20 @@ set -e  # Stop on error if found
 echo "Updating system packages..."
 sudo apt update && sudo apt upgrade -y
 
-echo "Installing system dependencies..."
-sudo apt install -y python3 python3-pip python3-venv build-essential libpq-dev postgresql-client python3-pyqt6
-
-echo "Creating Python virtual environment..."
+echo "Ensuring proper order of events..."
+sudo apt install -y python3
+sudo apt install -y python3-venv
 python3 -m venv venv --system-site-packages
-
-echo "Activating virtual environment..."
 source venv/bin/activate
+echo "Installing PIP..."
+sudo apt install python3-pip
+pip install --upgrade setuptools wheel
 
-echo "Upgrading pip..."
-pip install --upgrade pip setuptools wheel
+echo "Installing system dependencies..."
+sudo apt install -y build-essential libpq-dev postgresql-client
 
 echo "Installing Python dependencies..."
+pip install PyQt6 psycopg2-binary
 pip install -r config/requirements.txt
 
 

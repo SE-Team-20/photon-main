@@ -1,3 +1,4 @@
+
 import socket
 from database import DB
 import testdb
@@ -136,7 +137,7 @@ class UDPConfigWindow(QWidget):
             )
             return
 
-        self.main_window = MainWindow(udp, DB())
+        self.main_window = MainWindow(udp, testdb)
         self.main_window.show()
         self.close()
 
