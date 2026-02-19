@@ -1,6 +1,5 @@
 
 import socket
-from database import DB
 import testdb
 from PyQt6.QtWidgets import (
     QMainWindow,
@@ -299,11 +298,11 @@ class MainWindow(QMainWindow):
             index_label_list.append(player_index_label)
 
             # UI input fields
-            player_id_edit = QLineEdit()
+            id_edit = QLineEdit()
             codename_edit = QLineEdit()
             equipment_id_edit = QLineEdit()
 
-            for entry in (player_id_edit, codename_edit, equipment_id_edit):
+            for entry in (id_edit, codename_edit, equipment_id_edit):
                 entry.setFixedSize(80, 20)
                 entry.setStyleSheet(cool_font)
 
@@ -311,17 +310,17 @@ class MainWindow(QMainWindow):
             codename_edit.setReadOnly(True)
             equipment_id_edit.setReadOnly(True)
             
-            player_entry_grid.addWidget(player_id_edit, row, 1)
+            player_entry_grid.addWidget(id_edit, row, 1)
             player_entry_grid.addWidget(codename_edit, row, 2)
             player_entry_grid.addWidget(equipment_id_edit, row, 3)
 
-            row_data = [player_id_edit, codename_edit, equipment_id_edit]
+            row_data = [id_edit, codename_edit, equipment_id_edit]
             entries.append(row_data)
 
             # OnKeyPressed(return) -> enable event
             # Player ID entry
-            player_id_edit.returnPressed.connect(
-                lambda r=row_data, t=team_name, idx=row-1: self.on_player_id_enter(r, t, idx)
+            id_edit.returnPressed.connect(
+                lambda r=row_data, t=team_name, idx=row-1: self.on_id_enter(r, t, idx)
             )
             # Codename entry
             codename_edit.returnPressed.connect(
@@ -336,13 +335,13 @@ class MainWindow(QMainWindow):
         return entries
 
     # Affects the codename section after making the query to the database
-    def on_player_id_enter(self, row_data, team, index):
-        player_id = row_data[0].text().strip()
+    def on_id_enter(self, row_data, team, index):
+        id = row_data[0].text().strip()
 
         index_labels = self.red_index_labels if team=="RED" else self.green_index_labels
 
         # clear the label
-        if not player_id:
+        if not id:
             index_labels[index].setText("")
             row_data[1].clear()
             row_data[1].setReadOnly(True)
@@ -351,16 +350,16 @@ class MainWindow(QMainWindow):
         
         # Convert to integer
         try:
-            player_id = int(player_id)
+            id = int(id)
         except ValueError:
-            print(f"Error: player_id must be integer: {player_id}")
+            print(f"Error: id must be integer: {id}")
             return
         
         # Visual update
         index_labels[index].setText(f"Player #{index+1}")
 
         # Query if the player ID is registered already
-        codename = False if isDevMode() else self.db.isRegistered(player_id)
+        codename = False if isDevMode() else self.db.query_codename(id)
 
         if codename:
             # fill the codename and move to equipment
@@ -383,17 +382,17 @@ class MainWindow(QMainWindow):
         if row_data[1].isReadOnly():
             return
 
-        player_id_text = row_data[0].text().strip()
+        id_text = row_data[0].text().strip()
         codename = row_data[1].text().strip()
 
         # ignore if blank
-        if not player_id_text or not codename:
+        if not id_text or not codename:
             row_data[2].setReadOnly(True)
             return
 
         # Ignore when invalid ID
         try:
-            player_id = int(player_id_text)
+            id = int(id_text)
         except ValueError:
             return 
 
@@ -406,7 +405,7 @@ class MainWindow(QMainWindow):
         isRegistered = self.db.isRegistered()
 
         # different methods (update if existing / add new if new)
-        success = self.db.updateCodename(player_id, codename) if isRegistered else self.db.usePlayerID(player_id, codename)
+        success = self.db.update_codename(id, codename) if isRegistered else self.db.usePlayerID(id, codename)
 
         if success:
             # Player added – update style and move to equipment
@@ -420,7 +419,7 @@ class MainWindow(QMainWindow):
 
     # broadcast the equipment ID if successful
     def on_row_submit(self, row_data, team, index):
-        player_id = row_data[0].text().strip()
+        id = row_data[0].text().strip()
         equip_id = row_data[2].text().strip()
 
         # ignore if invalid data type for equip ID
@@ -438,17 +437,17 @@ class MainWindow(QMainWindow):
             return
         
         # if the previous input field remains blank
-        if not player_id or not equip_id:
+        if not id or not equip_id:
             print(f"[{team}] ERROR: Both fields are required for this row.")
-            if not player_id:
+            if not id:
                 row_data[0].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
             if not equip_id:
                 row_data[2].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
             return
         
         # Connects to database and register the in-game info
-        if not isDevMode() and self.db.addPlayerNextGame(player_id, 0 if team=="RED" else 1, equip_id):
-            print(f"[{team}] SUCCESS - Player: {player_id}, Equipment: {equip_id}, Player Index: {index}")
+        if not isDevMode() and self.db.addPlayerNextGame(id, 0 if team=="RED" else 1, equip_id):
+            print(f"[{team}] SUCCESS - Player: {id}, Equipment: {equip_id}, Player Index: {index}")
 
         row_data[2].setStyleSheet("color: black; font-weight: bold; font-size: 12px;")
         self.udp.broadcast_equipment_id(equip_id)
