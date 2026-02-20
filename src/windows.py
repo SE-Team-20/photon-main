@@ -317,8 +317,8 @@ class MainWindow(QMainWindow):
             print("Error: we cannot proceed with database connection when isDevMode is active.")
             row_data[2].setReadOnly(False)
             return
-        is_registered = self.db.is_registered()
-        success = self.db.update_codename(id, codename) if is_registered else self.db.update_codename(id, codename)
+        is_registered = self.db._is_registered()
+        success = self.db._update_codename(id, codename) if is_registered else self.db._update_codename(id, codename)
         if success:
             row_data[2].setReadOnly(False)
             row_data[1].setStyleSheet("color: black;")
