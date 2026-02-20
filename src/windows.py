@@ -263,8 +263,8 @@ class MainWindow(QMainWindow):
         self.red_panel.setFixedSize(panel_width, panel_height)
         self.green_panel.setFixedSize(panel_width, panel_height)
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
+    def resize_event(self, event):
+        super().resize_event(event)
         self.update_panel_sizes()
 
 
@@ -359,7 +359,7 @@ class MainWindow(QMainWindow):
         index_labels[index].setText(f"Player #{index+1}")
 
         # Query if the player ID is registered already
-        codename = False if isDevMode() else self.db.query_codename(id)
+        codename = False if isDevMode() else self.db._query_codename(id)
 
         if codename:
             # fill the codename and move to equipment
@@ -402,10 +402,10 @@ class MainWindow(QMainWindow):
             row_data[2].setReadOnly(False)
             return
         
-        isRegistered = self.db.isRegistered()
+        is_registered = self.db.is_registered()
 
         # different methods (update if existing / add new if new)
-        success = self.db.update_codename(id, codename) if isRegistered else self.db.usePlayerID(id, codename)
+        success = self.db.update_codename(id, codename) if is_registered else self.db.update_codename(id, codename)
 
         if success:
             # Player added – update style and move to equipment
@@ -446,7 +446,7 @@ class MainWindow(QMainWindow):
             return
         
         # Connects to database and register the in-game info
-        if not isDevMode() and self.db.addPlayerNextGame(id, 0 if team=="RED" else 1, equip_id):
+        if not isDevMode() and self.db._queue_player(id, 0 if team=="RED" else 1, equip_id):
             print(f"[{team}] SUCCESS - Player: {id}, Equipment: {equip_id}, Player Index: {index}")
 
         row_data[2].setStyleSheet("color: black; font-weight: bold; font-size: 12px;")
@@ -454,7 +454,7 @@ class MainWindow(QMainWindow):
             
 
 class RedTeamPanel(QWidget):
-    def paintEvent(self, event):
+    def paint_event(self, event):
         painter = QPainter(self)
         # Draw a dark red rectangle that fills this specific widget.
         painter.setBrush(QBrush(QColor(100, 0, 0, 127)))
@@ -462,7 +462,7 @@ class RedTeamPanel(QWidget):
         painter.drawRoundedRect(self.rect(), 20, 20)
 
 class GreenTeamPanel(QWidget):
-    def paintEvent(self, event):
+    def paint_event(self, event):
         painter = QPainter(self)
         # Draw a dark green rectangle that fills this specific widget.
         painter.setBrush(QBrush(QColor(0, 100, 0, 127)))

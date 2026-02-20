@@ -40,7 +40,7 @@ class GameManager:
         self.equips = {}
         self.players = {}
 
-    def addPlayer(self, playerID: int, teamID: int, equipID: int) -> bool:
+    def add_player(self, playerID: int, teamID: int, equipID: int) -> bool:
         if equipID in self.equips or playerID in self.players:
             return False
         self.equips[equipID] = playerID
@@ -68,20 +68,20 @@ class DB:
             self.gm = None
             return
 
-        self._create_table()
-        self.uf = UnionFind(self._getAllPlayerID())
+        self.create_table()
+        self.uf = UnionFind(self.get_all_ids())
         self.gm = GameManager()
         if isDevMode():
             print("dev: DB connection succeeded")
 
     # Internal helpers
-    def _ensure_db(self):
+    def ensure_db(self):
         if self.conn is None or self.cur is None:
             raise RuntimeError("Database is not connected")
 
-    def _safe_exec(self, query):
+    def safe_exec(self, query):
         try:
-            self._ensure_db()
+            self.ensure_db()
             self.cur.execute(query)
             self.conn.commit()
             return True
@@ -90,9 +90,9 @@ class DB:
             print("DB error:", e)
             return False
 
-    def _create_table(self):
+    def create_table(self):
         """Create the players table with only id and codename."""
-        self._safe_exec(sql.SQL(
+        self.safe_exec(sql.SQL(
             '''
             CREATE TABLE IF NOT EXISTS players (
                 id SERIAL PRIMARY KEY,
@@ -101,17 +101,17 @@ class DB:
             '''
         ))
 
-    def _getAllPlayerID(self):
-        self._ensure_db()
+    def get_all_ids(self):
+        self.ensure_db()
         try:
             self.cur.execute("SELECT id FROM players;")
             return [row[0] for row in self.cur.fetchall()]
         except Exception as e:
-            print("DB error in _getAllPlayerID:", e)
+            print("DB error in get_all_ids:", e)
             return []
 
-    def _getBasicPlayerInfo(self, playerID: int):
-        self._ensure_db()
+    def get_player_info(self, playerID: int):
+        self.ensure_db()
         try:
             self.cur.execute(
                 sql.SQL(
@@ -123,15 +123,15 @@ class DB:
                 return False
             return [row[0], row[1] if row[1] is not None else ""]
         except Exception as e:
-            print("DB error in _getBasicPlayerInfo:", e)
+            print("DB error in get_player_info:", e)
             return False
 
     def add_player(self, codename):
         # Insert a new player with auto‑generated ID. Returns the new id.
         if self.conn is None:
-            self._connect()
+            self.connect()
         try:
-            self._ensure_db()
+            self.ensure_db()
             self.cur.execute(
                 "INSERT INTO players (codename) VALUES (%s) RETURNING id;",
                 (codename,)
@@ -141,7 +141,7 @@ class DB:
             if self.uf:
                 self.uf.use(new_id)
             # Show the updated table after insertion
-            self.showTable()
+            self.show_table()
             return new_id
         except Exception as e:
             if self.conn:
@@ -151,9 +151,9 @@ class DB:
 
     def query_id(self, id):
         if self.conn is None:
-            self._connect()
+            self.connect()
         try:
-            self._ensure_db()
+            self.ensure_db()
             self.cur.execute("SELECT * FROM players WHERE id = %s;", (id,))
             return self.cur.fetchone()
         except Exception as e:
@@ -168,69 +168,64 @@ class DB:
         self.cur = None
         self.conn = None
 
-    def isRegistered(self, playerID: int) -> bool:
+    def is_registered(self, playerID: int) -> bool:
         # Return True if a player with the given ID exists.
-        self._ensure_db()
+        self.ensure_db()
         try:
             self.cur.execute(
                 sql.SQL("SELECT EXISTS (SELECT 1 FROM players WHERE id = {});").format(sql.Literal(playerID))
             )
             return self.cur.fetchone()[0]
         except Exception as e:
-            print("DB error in isRegistered:", e)
+            print("DB error in is_registered:", e)
             return False
 
-    def findNewPlayerID(self, playerID: int):
-        if self.uf is None:
-            return False
-        return self.uf.find()
-
-    def usePlayerID(self, playerID: int, codename: str) -> bool:
+    def update_codename(self, playerID: int, codename: str) -> bool:
         if self.uf is None:
             return False
         if not self.uf.use(playerID):
             return False
-        success = self._safe_exec(sql.SQL(
+        success = self.safe_exec(sql.SQL(
             "INSERT INTO players (id, codename) VALUES ({}, {});"
         ).format(sql.Literal(playerID), sql.Literal(codename)))
         if success:
             # Show the updated table after insertion
-            self.showTable()
+            self.show_table()
         return success
 
-    def addPlayerNextGame(self, playerID: int, teamID: int, equipID: int) -> bool:
-        if self.gm is None or not self.isRegistered(playerID):
+    def queue_player(self, playerID: int, teamID: int, equipID: int) -> bool:
+        if self.gm is None or not self.is_registered(playerID):
             return False
-        return self.gm.addPlayer(playerID, teamID, equipID)
+        return self.gm.add_player(playerID, teamID, equipID)
 
-    def showTable(self) -> bool:
+    def show_table(self) -> bool:
         # show all players in the database
         print("--- all players in the database ---")
-        self._ensure_db()
+        self.ensure_db()
         try:
             self.cur.execute("SELECT id, codename FROM players ORDER BY id;")
             rows = self.cur.fetchall()
             for pid, name in rows:
                 print(f"ID: {pid}, codename: {name if name else ''}")
         except Exception as e:
-            print("DB error in showTable:", e)
+            print("DB error in show_table:", e)
             return False
         print("---------")
         return True
 
     def update_codename(self, playerID: int, codename: str) -> bool:
-        result = self._safe_exec(sql.SQL(
+        result = self.safe_exec(sql.SQL(
             "UPDATE players SET codename = {} WHERE id = {};"
         ).format(sql.Literal(codename), sql.Literal(playerID)))
         if result and self.cur.rowcount == 0:
             return False   # No player with that ID
         if result:
             # Show the updated table after successful update
-            self.showTable()
+            self.show_table()
         return result
 
     def get_leaderboard(self, team_id: int):
-        self._ensure_db()
+        self.ensure_db()
         if not validIndex(team_id, NUM_TEAM):
             return False
         lb = team_id * MAX_NUM_PLAYER
@@ -261,7 +256,7 @@ class DB:
             print("DB error in get_leaderboard:", e)
             return False
 
-    def _connect(self):
+    def connect(self):
         try:
             self.conn = psycopg2.connect(**connection_params)
             self.cur = self.conn.cursor()
@@ -272,7 +267,7 @@ class DB:
 
     def query_codename(self, id: int):
         # return codename if exitst, false otherwise
-        info = self._getBasicPlayerInfo(id)
+        info = self.get_player_info(id)
         if info is False:
             return False
         return info[1]  # codename
@@ -280,7 +275,7 @@ class DB:
 
 #global methods for simplified access to the DB class
 _db_instance = None
-_last_checked_registered = False   # state for isRegistered()
+_last_checked_registered = False   # state for is_registered()
 
 def _get_db():
     global _db_instance
@@ -288,27 +283,27 @@ def _get_db():
         _db_instance = DB()
     return _db_instance
 
-def query_codename(id):
+def _query_codename(id):
     global _last_checked_registered
     db = _get_db()
     codename = db.query_codename(id)
     _last_checked_registered = (codename is not False)
     return codename
 
-def isRegistered():
+def _is_registered():
     return _last_checked_registered
 
-def update_codename(id, codename):
+def _update_codename(id, codename):
     db = _get_db()
     return db.update_codename(id, codename)
 
-def usePlayerID(id, codename):
+def _update_codename(id, codename):
     db = _get_db()
-    return db.usePlayerID(id, codename)
+    return db.update_codename(id, codename)
 
-def addPlayerNextGame(id, team_id, equip_id):
+def _queue_player(id, team_id, equip_id):
     db = _get_db()
-    return db.addPlayerNextGame(id, team_id, equip_id)
+    return db.queue_player(id, team_id, equip_id)
 
 def close():
     db = _get_db()
