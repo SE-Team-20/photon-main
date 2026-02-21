@@ -17,7 +17,7 @@ from udp_server import UDPServer
 from PyQt6.QtGui import QGuiApplication, QPainter, QBrush, QColor
 from PyQt6.QtCore import Qt
 from util import isDevMode
-from constants import BLURRED_LOGO
+from constants import *
 
 class UDPConfigWindow(QWidget):
     def __init__(self, window_size):
@@ -35,8 +35,8 @@ class UDPConfigWindow(QWidget):
                 font-size: 14px;
             }
             QLineEdit {
-                background-color: rgba(0, 0, 0, 180);
-                border: 1px solid #555;
+                background-color: {SEMI_TRANSPARENT_BLACK};
+                border: 1px solid {DARK_GREY};
                 padding: 8px;
                 border-radius: 6px;
                 color: white;
@@ -44,7 +44,7 @@ class UDPConfigWindow(QWidget):
                 min-width: 220px;
             }
             QPushButton {
-                background-color: #b30000;
+                background-color: {DEEP_RED};
                 padding: 10px 25px;
                 border-radius: 6px;
                 font-weight: bold;
@@ -52,7 +52,7 @@ class UDPConfigWindow(QWidget):
                 color: white;
             }
             QPushButton:hover {
-                background-color: #e60000;
+                background-color: {LIGHT_RED};
             }
         """)
         layout = QVBoxLayout(self)
@@ -64,16 +64,16 @@ class UDPConfigWindow(QWidget):
 
         form = QFormLayout()
         form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-        form.setVerticalSpacing(12)
-        form.setHorizontalSpacing(20)
-        self.receive_input = QLineEdit("0.0.0.0")
-        self.broadcast_input = QLineEdit("127.0.0.1")
-        self.receive_input.setFixedHeight(30)
-        self.broadcast_input.setFixedHeight(30)
+        form.setVerticalSpacing(VERTICAL_SPACING)
+        form.setHorizontalSpacing(HORIZONTAL_SPACING)
+        self.receive_input = QLineEdit(f"{RECIEVE_INPUT}")
+        self.broadcast_input = QLineEdit(f"{BROADCAST_INPUT}")
+        self.receive_input.setFixedHeight(NETWORK_SECTION_HEIGHT)
+        self.broadcast_input.setFixedHeight(NETWORK_SECTION_HEIGHT)
         form.addRow("Receive IP:", self.receive_input)
         form.addRow("Broadcast IP:", self.broadcast_input)
         layout.addLayout(form)
-        layout.addSpacing(20)
+        layout.addSpacing(NETWORK_SECTION_SPACING)
 
         self.start_button = QPushButton("Start System")
         self.start_button.clicked.connect(self.start_system)
@@ -117,8 +117,8 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowTitle("PHOTON")
         screen = QGuiApplication.primaryScreen().availableGeometry()
-        window_width = screen.width() / (5/4) # 4:5 aspect ratio
-        window_height = screen.height() / (5/4)
+        window_width = screen.width() * ASPECT_RATIO # 4:5 aspect ratio
+        window_height = screen.height() * ASPECT_RATIO
         x = (screen.width() - window_width) // 2
         y = (screen.height() - window_height) // 2
         self.setGeometry(x, y, window_width, window_height)

@@ -39,6 +39,8 @@ DBINIT_SEC = "postgresql"
 
 SOCKET_BROADCAST = "7500"
 SOCKET_RECEIVE = "7501"
+RECIEVE_INPUT = "0.0.0.0"
+BROADCAST_INPUT = "127.0.0.1"
 
 CODE_GAMESTART = "202"
 CODE_GAMEEND = "221"
@@ -74,6 +76,11 @@ PENALTY_TAKEDOWN = -10
 # COLOR_ACCENT = "#88C0D0"
 
 # Backgrounds
+SEMI_TRANSPARENT_BLACK = "rgba(0, 0, 0, 180)"
+DARK_GREY = "#555555"
+DEEP_RED = "#b30000"
+LIGHT_RED = "#e60000"
+
 # COLOR_BG_MAIN = "#ECEFF4"
 # COLOR_BG_DARK = "#2E3440"
 # COLOR_BG_WIDGET = "#FFFFFF"
@@ -91,7 +98,11 @@ PENALTY_TAKEDOWN = -10
 # =========================================================
 # Window / Layout
 # =========================================================
-
+VERTICAL_SPACING = 12
+HORIZONTAL_SPACING = 20
+NETWORK_SECTION_HEIGHT = 30
+NETWORK_SECTION_SPACING = 20
+ASPECT_RATIO = 4/5
 # WINDOW_WIDTH = 1200
 # WINDOW_HEIGHT = 800
 
@@ -125,4 +136,4 @@ PENALTY_TAKEDOWN = -10
 # =========================================================
 
 APP_NAME = "Photon Main"
-# VERSION = "1.0.0"
+# VERSION = "1.0.1"
