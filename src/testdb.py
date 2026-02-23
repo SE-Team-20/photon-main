@@ -213,17 +213,6 @@ class DB:
         print("---------")
         return True
 
-    def update_codename(self, playerID: int, codename: str) -> bool:
-        result = self.safe_exec(sql.SQL(
-            "UPDATE players SET codename = {} WHERE id = {};"
-        ).format(sql.Literal(codename), sql.Literal(playerID)))
-        if result and self.cur.rowcount == 0:
-            return False   # No player with that ID
-        if result:
-            # Show the updated table after successful update
-            self.show_table()
-        return result
-
     def get_leaderboard(self, team_id: int):
         self.ensure_db()
         if not validIndex(team_id, NUM_TEAM):
@@ -292,10 +281,6 @@ def _query_codename(id):
 
 def _is_registered():
     return _last_checked_registered
-
-def _update_codename(id, codename):
-    db = _get_db()
-    return db.update_codename(id, codename)
 
 def _update_codename(id, codename):
     db = _get_db()
