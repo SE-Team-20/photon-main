@@ -1,7 +1,8 @@
 # constants.py
 # Centralized UI / Asset constants
-
 from pathlib import Path
+from PyQt6.QtCore import Qt
+
 
 # =========================================================
 # Base Paths
@@ -77,10 +78,19 @@ PENALTY_TAKEDOWN = -10
 
 # Backgrounds
 SEMI_TRANSPARENT_BLACK = "rgba(0, 0, 0, 180)"
+RED = "rgba(100, 0, 0, 150)"
+GREEN = "rgba(0, 100, 0, 150)"
 DARK_GREY = "#555555"
 DEEP_RED = "#b30000"
 LIGHT_RED = "#e60000"
-
+BLUR_RADIUS = 15
+DROPSHADOW_OFFSET_AMOUNT = (0, 5)
+SHADOW_COLOR = (0, 0, 0, 160)
+CONTENT_MARGINS = (0, 0, 0, 0)
+BLURRED_LOGO_BACKGROUND = f"""
+                border-image: url('{BLURRED_LOGO}');
+                background-position: center;
+        """
 # COLOR_BG_MAIN = "#ECEFF4"
 # COLOR_BG_DARK = "#2E3440"
 # COLOR_BG_WIDGET = "#FFFFFF"
@@ -103,6 +113,17 @@ HORIZONTAL_SPACING = 20
 NETWORK_SECTION_HEIGHT = 30
 NETWORK_SECTION_SPACING = 20
 ASPECT_RATIO = 4/5
+X_ORIGIN_ = "(QGuiApplication.primaryScreen().availableGeometry().width() - eval(WINDOW_WIDTH)) // 2"
+Y_ORIGIN = "(QGuiApplication.primaryScreen().availableGeometry().height() - eval(WINDOW_HEIGHT)) // 2"
+WINDOW_WIDTH = "QGuiApplication.primaryScreen().availableGeometry().width() * ASPECT_RATIO"
+WINDOW_HEIGHT = "QGuiApplication.primaryScreen().availableGeometry().height() * ASPECT_RATIO"
+WINDOW_STAYS_ON_TOP = True
+def window_stays_on_top(self, enable):
+    if enable:
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
+    else:
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowStaysOnTopHint)
+    self.show()
 # WINDOW_WIDTH = 1200
 # WINDOW_HEIGHT = 800
 
