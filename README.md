@@ -1,4 +1,4 @@
-# Photon main (team 20)
+sudo# Photon main (team 20)
 [quick link to the main branch](https://github.com/SE-Team-20/photon-main/tree/main)
 
 ## Quick Run Instructions (Linux)

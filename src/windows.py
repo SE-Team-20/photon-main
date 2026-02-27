@@ -121,8 +121,8 @@ class MainWindow(QMainWindow):
         window_height = screen.height() * ASPECT_RATIO
         x = (screen.width() - window_width) // 2
         y = (screen.height() - window_height) // 2
-        self.setGeometry(x, y, window_width, window_height)
-        self.setFixedSize(window_width, window_height)
+        self.setGeometry(int(x), int(y), int(window_width), int(window_height))
+        self.setFixedSize(int(window_width), int(window_height))
 
         central_widget = QWidget()
         central_widget.setObjectName("MainWindowWidget")
