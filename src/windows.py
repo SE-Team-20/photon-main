@@ -318,6 +318,7 @@ class MainWindow(QMainWindow):
             row_data[2].setReadOnly(False)
             return
         is_registered = self.db._is_registered()
+        # need to separate these two methods, update codename if is registered else add palyer. need new global method for this to work."
         success = self.db._update_codename(id, codename) if is_registered else self.db._update_codename(id, codename)
         if success:
             row_data[2].setReadOnly(False)
