@@ -264,6 +264,7 @@ class MainWindow(QMainWindow):
             entries.append(row_data)
 
             id_edit.returnPressed.connect(lambda r=row_data, t=team_name, idx=row-1: self.on_id_enter(r, t, idx))
+            id_edit.keyPressEvent = lambda event, r=row_data, t=team_name, idx=row-1: self.on_id_keypress(event, r, t, idx)
             codename_edit.returnPressed.connect(lambda r=row_data, t=team_name, idx=row-1: self.on_codename_enter(r, t, idx))
             equipment_id_edit.returnPressed.connect(lambda r=row_data, t=team_name, idx=row-1: self.on_row_submit(r, t, idx))
 
@@ -301,6 +302,25 @@ class MainWindow(QMainWindow):
             row_data[1].setStyleSheet("color: gray;")
             row_data[1].setFocus()
 
+    def on_id_keypress(self, event, row_data, team, index):
+        if event.key() == Qt.Key.Key_Delete:
+            id_text = row_data[0].text().strip()
+            if not id_text:
+                return
+            is_registered = self.db._is_registered()
+            success = self.db._delete_player(id_text)
+            if success:
+                row_data[0].clear()
+                row_data[1].clear()
+                row_data[1].setReadOnly(False)
+                row_data[1].setPlaceholderText("Successfully deleted player")
+                index_labels = self.red_index_labels if team=="RED" else self.green_index_labels
+                index_labels[index].setText("")
+            else:
+                print("Failed deleting the player from database")
+            
+        QLineEdit.keyPressEvent(row_data[0], event)
+
     def on_codename_enter(self, row_data, team, index):
         if row_data[1].isReadOnly():
             return
@@ -318,8 +338,7 @@ class MainWindow(QMainWindow):
             row_data[2].setReadOnly(False)
             return
         is_registered = self.db._is_registered()
-        # need to separate these two methods, update codename if is registered else add palyer. need new global method for this to work."
-        success = self.db._update_codename(id, codename) if is_registered else self.db._update_codename(id, codename)
+        success = self.db._update_codename(id, codename)
         if success:
             row_data[2].setReadOnly(False)
             row_data[1].setStyleSheet("color: black;")

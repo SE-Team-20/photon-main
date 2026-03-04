@@ -149,6 +149,24 @@ class DB:
             print("Error adding player:", e)
             return None
 
+    def delete_player(self, id):
+        if self.conn is None:
+            self.connect()
+        try:
+            self.ensure_db()
+            self.cur.execute("DELETE FROM players WHERE id = %s;", (id,))
+            self.conn.commit()
+            if self.uf:
+                self.uf.root.pop(id, None)  # Remove from union-find
+            # Show the updated table after deletion
+            self.show_table()
+            return True
+        except Exception as e:
+            if self.conn:
+                self.conn.rollback()
+            print("Error deleting player:", e)
+            return False
+
     def query_id(self, id):
         if self.conn is None:
             self.connect()
@@ -181,15 +199,19 @@ class DB:
             return False
 
     def update_codename(self, playerID: int, codename: str) -> bool:
-        if self.uf is None:
-            return False
-        if not self.uf.use(playerID):
-            return False
-        success = self.safe_exec(sql.SQL(
+        if self.is_registered(playerID):
+        # Update existing player
+            success = self.safe_exec(sql.SQL(
+                "UPDATE players SET codename = {} WHERE id = {};"
+                ).format(sql.Literal(codename), sql.Literal(playerID)))
+        else:
+        # Insert new player
+            if self.uf is None or not self.uf.use(playerID):
+                return False
+            success = self.safe_exec(sql.SQL(
             "INSERT INTO players (id, codename) VALUES ({}, {});"
-        ).format(sql.Literal(playerID), sql.Literal(codename)))
+            ).format(sql.Literal(playerID), sql.Literal(codename)))
         if success:
-            # Show the updated table after insertion
             self.show_table()
         return success
 
@@ -271,6 +293,10 @@ def _get_db():
     if _db_instance is None:
         _db_instance = DB()
     return _db_instance
+
+def _delete_player(id):
+    db = _get_db()
+    return db.delete_player(id)
 
 def _query_codename(id):
     global _last_checked_registered
