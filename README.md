@@ -45,20 +45,14 @@ chmod +x install.sh run.sh
 </tr>
 </table>
 
-## TODOs (week 2)
-by February 10th
-- [x] create splash screen (Thomas)
-- [x] create player entry screen (Thomas)
-- [x] link database to application (RyoB)
-- [x] add two players via application
-- [x] set up UDP sockets, broadcast equipment codes
-- [x] have option to select different network for UDP sockets
-
---- 
-by 15th
-- [x] include an install script to the repository
-- [x] modify this readme to include the install instruction
-- [x] enhance README
+## TODOs (Sprint 3)
+by March 15th
+- [x] create clear entries button (Thomas)
+- [ ] create play action entry screen - template button created, widget screen needs to be configured.
+- [ ] ensure inputted hardware IDs are carried over to the play action screen.
+- [x] update trello card assignments for all team members.
+- [ ] code up game start countdown timer in play action screen (for simplicity).
+- [x] ensure install script executes as expected in a fresh Linux environment.
 
 
 
