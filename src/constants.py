@@ -123,11 +123,13 @@ BLURRED_LOGO_BACKGROUND = f"""
 # Window / Layout
 # =========================================================
 VERTICAL_SPACING = 12
+COOL_FONT = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: transparent;"
 HORIZONTAL_SPACING = 20
 NETWORK_SECTION_HEIGHT = 30
 NETWORK_SECTION_SPACING = 20
 ASPECT_RATIO = 4/5
-X_ORIGIN_ = "(QGuiApplication.primaryScreen().availableGeometry().width() - eval(WINDOW_WIDTH)) // 2"
+BUTTON_DIMENSIONS = 60
+X_ORIGIN = "(QGuiApplication.primaryScreen().availableGeometry().width() - eval(WINDOW_WIDTH)) // 2"
 Y_ORIGIN = "(QGuiApplication.primaryScreen().availableGeometry().height() - eval(WINDOW_HEIGHT)) // 2"
 WINDOW_WIDTH = "QGuiApplication.primaryScreen().availableGeometry().width() * ASPECT_RATIO"
 WINDOW_HEIGHT = "QGuiApplication.primaryScreen().availableGeometry().height() * ASPECT_RATIO"

@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
 )
 from udp_server import UDPServer
 from PyQt6.QtGui import QGuiApplication, QPainter, QBrush, QColor
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer, QEvent
 from util import isDevMode
 from constants import *
 
@@ -195,10 +195,32 @@ class MainWindow(QMainWindow):
 
         self.red_index_labels = []
         self.green_index_labels = []
-        self.create_player_grid(self.red_panel.layout(), "RED", self.red_index_labels)
-        self.create_player_grid(self.green_panel.layout(), "GREEN", self.green_index_labels)
+        self.red_entries = self.create_player_grid(self.red_panel.layout(), "RED", self.red_index_labels)
+        self.green_entries = self.create_player_grid(self.green_panel.layout(), "GREEN", self.green_index_labels)
 
         self.update_panel_sizes()
+
+        # New Game button
+        self.new_game_button = QPushButton("New Game", self.centralWidget())
+        self.new_game_button.setFixedSize(120, 60)
+        self.new_game_button.move(0, 0)
+        button_style = """
+            background-color: rgba(40, 110, 230, 150);
+            border-radius: 20px;
+            padding: 5px;
+            font-weight: bold;
+            font-size: 13px;
+            font-family: 'Orbitron', 'Courier New', sans-serif;
+            color: white;
+        """
+        self.new_game_button.setStyleSheet(button_style)
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setOffset(0, 5)
+        shadow.setColor(QColor(0, 0, 0, 160))
+        self.new_game_button.setGraphicsEffect(shadow)
+        self.new_game_button.raise_()
+        self.new_game_button.clicked.connect(self.clear_all_grids)
 
     def update_panel_sizes(self):
         w = self.width()
@@ -231,7 +253,6 @@ class MainWindow(QMainWindow):
 
         entries = []
         for row in range(1, 16):
-            # Index label column 0 fixed width 70
             player_index_label = QLabel("")
             player_index_label.setStyleSheet("color: black; font-weight: bold;")
             player_index_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -239,17 +260,14 @@ class MainWindow(QMainWindow):
             player_entry_grid.addWidget(player_index_label, row, 0)
             index_label_list.append(player_index_label)
 
-            # ID column 1 fixed width 35
             id_edit = QLineEdit()
             id_edit.setFixedSize(35, 28)
             id_edit.setStyleSheet(cool_font)
 
-            # Codename column2 fixed width 140
             codename_edit = QLineEdit()
             codename_edit.setFixedSize(140, 28)
             codename_edit.setStyleSheet(cool_font)
 
-            # Equipment ID column 3 fixed width 35
             equipment_id_edit = QLineEdit()
             equipment_id_edit.setFixedSize(35, 28)
             equipment_id_edit.setStyleSheet(cool_font)
@@ -319,7 +337,7 @@ class MainWindow(QMainWindow):
             row_data[2].setReadOnly(False)
             return
         is_registered = self.db._is_registered()
-        # need to separate these two methods, update codename if is registered else add palyer. need new global method for this to work."
+        # super fun integer return code system for different outcomes of codename update/creation
         result = self.db._update_codename(id, codename)
         if result == NEW_CODENAME_ADDED:
             row_data[2].setReadOnly(False)
@@ -388,6 +406,36 @@ class MainWindow(QMainWindow):
             print(f"[{team}] SUCCESS - Player: {id}, Equipment: {equip_id}, Player Index: {index}")
         row_data[2].setStyleSheet("color: black; font-weight: bold; font-size: 12px;")
         self.udp.broadcast_equipment_id(equip_id)
+
+    def clear_all_grids(self):
+        confirmation_message = QMessageBox(self)
+        confirmation_message.setWindowTitle("Confirm Reset")
+        confirmation_message.setText("Are you ready for a New Game?")
+        confirmation_message.setIconPixmap(constants.logo_icon())
+        confirmation_message.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        confirmation_result = confirmation_message.exec()
+        if confirmation_result == QMessageBox.StandardButton.No:
+            return
+        else:
+            for i in range(MAX_NUM_PLAYER):
+                self.red_index_labels[i].setText("")
+                self.green_index_labels[i].setText("")
+                for entry in self.red_entries[i]:
+                    entry.clear()
+                    entry.setReadOnly(entry != self.red_entries[i][0])
+                    entry.setStyleSheet(COOL_FONT)
+                    entry.setPlaceholderText("")
+                for entry in self.green_entries[i]:
+                    entry.clear()
+                    entry.setReadOnly(entry != self.green_entries[i][0])
+                    entry.setStyleSheet(COOL_FONT)
+                    entry.setPlaceholderText("")
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_F12:
+            self.clear_all_grids()
+        else:
+            super().keyPressEvent(event)
 
 class RedTeamPanel(QWidget):
     def paintEvent(self, event):
