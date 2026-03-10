@@ -222,6 +222,32 @@ class MainWindow(QMainWindow):
         self.new_game_button.raise_()
         self.new_game_button.clicked.connect(self.clear_all_grids)
 
+        # Start play action window
+        self.play_action_window = PlayActionWindow()
+        self.start_game_button = QPushButton("Start Game", self.centralWidget())
+        self.start_game_button.setFixedSize(120, 60)
+        window_height = self.height()
+        window_width = self.width()
+        self.start_game_button.move(window_width/2 - self.start_game_button.width()/2, 0)
+        button_style = """
+            background-color: rgba(40, 110, 230, 150);
+            border-radius: 20px;
+            padding: 5px;
+            font-weight: bold;
+            font-size: 13px;
+            font-family: 'Orbitron', 'Courier New', sans-serif;
+            color: white;
+        """
+        self.start_game_button.setStyleSheet(button_style)
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setOffset(0, 5)
+        shadow.setColor(QColor(0, 0, 0, 160))
+        self.start_game_button.setGraphicsEffect(shadow)
+        self.start_game_button.raise_()
+        self.start_game_button.clicked.connect(self.show_play_action_window)
+
+
     def update_panel_sizes(self):
         w = self.width()
         h = self.height()
@@ -434,8 +460,26 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_F12:
             self.clear_all_grids()
+        elif event.key() == Qt.Key.Key_F5:
+            self.play_action_window.show()
         else:
             super().keyPressEvent(event)
+    
+    def show_play_action_window(self):
+        self.play_action_window.show()
+
+class PlayActionWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowTitle("PHOTON: Play Action")
+        screen = QGuiApplication.primaryScreen().availableGeometry()
+        window_width = screen.width() * ASPECT_RATIO # 4:5 aspect ratio
+        window_height = screen.height() * ASPECT_RATIO
+        x = (screen.width() - window_width) // 2
+        y = (screen.height() - window_height) // 2
+        self.setGeometry(int(x), int(y), int(window_width), int(window_height))
+        self.setFixedSize(int(window_width), int(window_height))
 
 class RedTeamPanel(QWidget):
     def paintEvent(self, event):
