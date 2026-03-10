@@ -2,6 +2,7 @@
 # Centralized UI / Asset constants
 from pathlib import Path
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
 
 
 # =========================================================
@@ -20,8 +21,16 @@ CONFIG_DIR = BASE_DIR / "config"
 # =========================================================
 # Image File Paths
 # =========================================================
-
 LOGO = Path(IMAGES_DIR / "logo.jpg").as_posix()
+def logo_icon():
+    """Return the cached logo pixmap (created on first call)."""
+    if not hasattr(logo_icon, "_cached"):
+        logo_icon._cached = QPixmap(LOGO).scaled(
+            144, 128,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
+    return logo_icon._cached
 BLURRED_LOGO = Path(IMAGES_DIR / "blurredlogo.jpg").as_posix()
 # BACKGROUND = IMAGES_DIR / "background.jpg"
 # DEFAULT_AVATAR = IMAGES_DIR / "default_avatar.png"
@@ -52,7 +61,12 @@ CODE_BASESCORE_GREEN = "43"
 # =========================================================
 # Database
 # =========================================================
-
+NEW_CODENAME_ADDED = 0
+EXISTING_CODENAME_UPDATED = 1
+CODENAME_ALREADY_EXISTS = 2
+ERROR_OCCURRED = 3
+CODENAME_CHANGE_ATTEMPT_MATCHES_EXISTING = 4
+COOL_GUY_EMOJI = f"\U0001F60E"
 
 # =========================================================
 # Gameplay

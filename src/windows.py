@@ -1,4 +1,5 @@
 import socket
+import constants
 import testdb
 from PyQt6.QtWidgets import (
     QMainWindow,
@@ -319,15 +320,50 @@ class MainWindow(QMainWindow):
             return
         is_registered = self.db._is_registered()
         # need to separate these two methods, update codename if is registered else add palyer. need new global method for this to work."
-        success = self.db._update_codename(id, codename) if is_registered else self.db._update_codename(id, codename)
-        if success:
+        result = self.db._update_codename(id, codename)
+        if result == NEW_CODENAME_ADDED:
             row_data[2].setReadOnly(False)
             row_data[1].setStyleSheet("color: black;")
             row_data[1].setPlaceholderText("")
-            row_data[2].setFocus()
-        else:
-            print("Failed registering the new codename to the player ID on database")
+            msg = QMessageBox(self)
+            msg.setWindowTitle(f"{COOL_GUY_EMOJI}")
+            msg.setText("Welcome to the fun!")
+            msg.setIconPixmap(constants.logo_icon())
+            msg.exec()
+        elif result == EXISTING_CODENAME_UPDATED:
+            row_data[2].setReadOnly(False)
+            row_data[1].setStyleSheet("color: black;")
+            row_data[1].setPlaceholderText("")
+            msg = QMessageBox(self)
+            msg.setWindowTitle(f"{COOL_GUY_EMOJI}")
+            msg.setText("Codename updated successfully!")
+            msg.setIconPixmap(constants.logo_icon())
+            msg.exec()
+        elif result == CODENAME_ALREADY_EXISTS:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Uh oh...")
+            msg.setText("Codename already exists for a different player. Please choose a unique codename.")
+            msg.setIcon(QMessageBox.Icon.Information)
+            msg.exec()
             row_data[1].setStyleSheet("border: 1px solid red; background-color: #ffcccc;")
+            row_data[1].setFocus()
+        elif result == ERROR_OCCURRED:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Error")
+            msg.setText("An unexpected error occurred while saving the codename. Try restarting application.")
+            msg.setIcon(QMessageBox.Icon.Critical)
+        elif result == CODENAME_CHANGE_ATTEMPT_MATCHES_EXISTING:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Doh!")
+            msg.setText("We promise your codename has been saved successsfully!")
+            msg.setIconPixmap(constants.logo_icon())
+            msg.exec()
+        else:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Error")
+            msg.setText("A really unexpected error occurred. Try calling IT.")
+            msg.setIcon(QMessageBox.Icon.Critical)
+            msg.exec()
 
     def on_row_submit(self, row_data, team, index):
         id = row_data[0].text().strip()
