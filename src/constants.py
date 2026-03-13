@@ -26,7 +26,7 @@ def logo_icon():
     """Return the cached logo pixmap (created on first call)."""
     if not hasattr(logo_icon, "_cached"):
         logo_icon._cached = QPixmap(LOGO).scaled(
-            144, 128,
+            240, 184,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation
         )
@@ -73,6 +73,7 @@ COOL_GUY_EMOJI = f"\U0001F60E"
 # =========================================================
 
 MAX_NUM_PLAYER = 15
+MAX_NUM_PLAYER_MINUSONE = 14
 NUM_TEAM = 2
 
 SCORE_BASE = 100
@@ -123,7 +124,9 @@ BLURRED_LOGO_BACKGROUND = f"""
 # Window / Layout
 # =========================================================
 VERTICAL_SPACING = 12
-COOL_FONT = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: transparent;"
+COOL_FONT = "font-family: 'Courier New'; font-size: 16px; font-weight: bold; background-color: teal;"
+RED_TEAM_BACKGROUND = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: rgba(128, 0, 128, 64);"
+GREEN_TEAM_BACKGROUND = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: rgba(0, 128, 128, 64);"
 HORIZONTAL_SPACING = 20
 NETWORK_SECTION_HEIGHT = 30
 NETWORK_SECTION_SPACING = 20

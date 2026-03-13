@@ -275,7 +275,7 @@ class MainWindow(QMainWindow):
         player_entry_grid.addWidget(codename_prompt, 0, 2)
         player_entry_grid.addWidget(eq_prompt, 0, 3)
 
-        cool_font = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: transparent;"
+        background = RED_TEAM_BACKGROUND if team_name == "RED" else GREEN_TEAM_BACKGROUND
 
         entries = []
         for row in range(1, 16):
@@ -288,17 +288,16 @@ class MainWindow(QMainWindow):
 
             id_edit = QLineEdit()
             id_edit.setFixedSize(35, 28)
-            id_edit.setStyleSheet(cool_font)
+            id_edit.setStyleSheet(background)
 
             codename_edit = QLineEdit()
             codename_edit.setFixedSize(140, 28)
-            codename_edit.setStyleSheet(cool_font)
+            codename_edit.setStyleSheet(background)
+            codename_edit.setReadOnly(True)
 
             equipment_id_edit = QLineEdit()
             equipment_id_edit.setFixedSize(35, 28)
-            equipment_id_edit.setStyleSheet(cool_font)
-
-            codename_edit.setReadOnly(True)
+            equipment_id_edit.setStyleSheet(background)
             equipment_id_edit.setReadOnly(True)
 
             player_entry_grid.addWidget(id_edit, row, 1)
@@ -317,25 +316,31 @@ class MainWindow(QMainWindow):
         return entries
 
     def on_id_enter(self, row_data, team, index):
-        id = row_data[0].text().strip()
-        index_labels = self.red_index_labels if team=="RED" else self.green_index_labels
-        if not id:
+        id_text = row_data[0].text().strip()
+        index_labels = self.red_index_labels if team == "RED" else self.green_index_labels
+        background = RED_TEAM_BACKGROUND if team == "RED" else GREEN_TEAM_BACKGROUND
+
+        if not id_text:
             index_labels[index].setText("")
             row_data[1].clear()
             row_data[1].setReadOnly(True)
             row_data[1].setPlaceholderText("")
+            row_data[1].setStyleSheet(background)
             return
+
         try:
-            id = int(id)
+            id_val = int(id_text)
         except ValueError:
-            print(f"Error: id must be integer: {id}")
+            print(f"Error: id must be integer: {id_text}")
             return
+
         index_labels[index].setText(f"Player #{index+1}")
-        codename = False if isDevMode() else self.db._query_codename(id)
+        codename = False if isDevMode() else self.db._query_codename(id_val)
+
         if codename:
             row_data[1].setText(codename)
             row_data[1].setReadOnly(False)
-            row_data[1].setStyleSheet("color: black;")
+            row_data[1].setStyleSheet(f"{background}; color: black;")
             row_data[1].setPlaceholderText("")
             row_data[2].setReadOnly(False)
             row_data[2].setFocus()
@@ -343,101 +348,128 @@ class MainWindow(QMainWindow):
             row_data[1].clear()
             row_data[1].setReadOnly(False)
             row_data[1].setPlaceholderText("Enter codename for new player")
-            row_data[1].setStyleSheet("color: gray;")
+            row_data[1].setStyleSheet(f"{background}; color: gray;")
             row_data[1].setFocus()
 
     def on_codename_enter(self, row_data, team, index):
         if row_data[1].isReadOnly():
             return
+
         id_text = row_data[0].text().strip()
         codename = row_data[1].text().strip()
         if not id_text or not codename:
             row_data[2].setReadOnly(True)
             return
+
         try:
-            id = int(id_text)
+            id_val = int(id_text)
         except ValueError:
             return
+
+        background = RED_TEAM_BACKGROUND if team == "RED" else GREEN_TEAM_BACKGROUND
+
         if isDevMode():
             print("Error: we cannot proceed with database connection when isDevMode is active.")
             row_data[2].setReadOnly(False)
             return
-        is_registered = self.db._is_registered()
-        # super fun integer return code system for different outcomes of codename update/creation
-        result = self.db._update_codename(id, codename)
+
+        result = self.db._update_codename(id_val, codename)
+
         if result == NEW_CODENAME_ADDED:
             row_data[2].setReadOnly(False)
-            row_data[1].setStyleSheet("color: black;")
+            row_data[1].setStyleSheet(f"{background}; color: black;")
             row_data[1].setPlaceholderText("")
             msg = QMessageBox(self)
+            msg.setStyleSheet(COOL_FONT)
             msg.setWindowTitle(f"{COOL_GUY_EMOJI}")
-            msg.setText("Welcome to the fun!")
+            msg.setText("New player added to the vault!")
             msg.setIconPixmap(constants.logo_icon())
             msg.exec()
         elif result == EXISTING_CODENAME_UPDATED:
             row_data[2].setReadOnly(False)
-            row_data[1].setStyleSheet("color: black;")
+            row_data[1].setStyleSheet(f"{background}; color: black;")
             row_data[1].setPlaceholderText("")
             msg = QMessageBox(self)
+            msg.setStyleSheet(COOL_FONT)
             msg.setWindowTitle(f"{COOL_GUY_EMOJI}")
             msg.setText("Codename updated successfully!")
             msg.setIconPixmap(constants.logo_icon())
             msg.exec()
         elif result == CODENAME_ALREADY_EXISTS:
             msg = QMessageBox(self)
+            msg.setStyleSheet(COOL_FONT)
             msg.setWindowTitle("Uh oh...")
-            msg.setText("Codename already exists for a different player. Please choose a unique codename.")
+            msg.setText("Codename already exists for a different player. Please ask player for a different codename.")
             msg.setIcon(QMessageBox.Icon.Information)
             msg.exec()
-            row_data[1].setStyleSheet("border: 1px solid red; background-color: #ffcccc;")
+            row_data[1].setStyleSheet(f"{background}; border: 1px solid red;")
             row_data[1].setFocus()
         elif result == ERROR_OCCURRED:
             msg = QMessageBox(self)
+            msg.setStyleSheet(COOL_FONT)
             msg.setWindowTitle("Error")
             msg.setText("An unexpected error occurred while saving the codename. Try restarting application.")
             msg.setIcon(QMessageBox.Icon.Critical)
         elif result == CODENAME_CHANGE_ATTEMPT_MATCHES_EXISTING:
             msg = QMessageBox(self)
+            msg.setStyleSheet(COOL_FONT)
+            msg.setIcon(QMessageBox.Icon.Information)
             msg.setWindowTitle("Doh!")
-            msg.setText("We promise your codename has been saved successsfully!")
-            msg.setIconPixmap(constants.logo_icon())
+            msg.setText("No codename change detected.")
             msg.exec()
         else:
             msg = QMessageBox(self)
+            msg.setStyleSheet(COOL_FONT)
             msg.setWindowTitle("Error")
             msg.setText("A really unexpected error occurred. Try calling IT.")
             msg.setIcon(QMessageBox.Icon.Critical)
             msg.exec()
+            
+        
+        if index < MAX_NUM_PLAYER_MINUSONE:
+            this_row = self.red_entries[index] if team == "RED" else self.green_entries[index]
+            this_row[2].setFocus()
+
 
     def on_row_submit(self, row_data, team, index):
-        id = row_data[0].text().strip()
-        equip_id = row_data[2].text().strip()
+        id_text = row_data[0].text().strip()
+        equip_text = row_data[2].text().strip()
+        background = RED_TEAM_BACKGROUND if team == "RED" else GREEN_TEAM_BACKGROUND
+
         try:
-            equip_id = int(equip_id)
+            equip_id = int(equip_text)
         except ValueError:
-            row_data[2].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
+            row_data[2].setStyleSheet(f"{background}; border: 1px solid red;")
             return
-        if team=="RED" and equip_id%2==0 or team=="GREEN" and equip_id%2==1:
+
+        # Parity check
+        if (team == "RED" and equip_id % 2 == 0) or (team == "GREEN" and equip_id % 2 == 1):
             print("Error: wrong equipment ID parity for the team color")
-            row_data[2].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
+            row_data[2].setStyleSheet(f"{background}; border: 1px solid red;")
             return
-        if not id or not equip_id:
+
+        if not id_text or not equip_text:
             print(f"[{team}] ERROR: Both fields are required for this row.")
-            if not id:
-                row_data[0].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
-            if not equip_id:
-                row_data[2].setStyleSheet("border: 1px solid red; background-color: #ffcccc; color: black;")
+            if not id_text:
+                row_data[0].setStyleSheet(f"{background}; border: 1px solid red;")
+            if not equip_text:
+                row_data[2].setStyleSheet(f"{background}; border: 1px solid red;")
             return
-        if not isDevMode() and self.db._queue_player(id, 0 if team=="RED" else 1, equip_id):
-            print(f"[{team}] SUCCESS - Player: {id}, Equipment: {equip_id}, Player Index: {index}")
-        row_data[2].setStyleSheet("color: black; font-weight: bold; font-size: 12px;")
+
+        if not isDevMode() and self.db._queue_player(id_text, 0 if team == "RED" else 1, equip_id):
+            print(f"[{team}] SUCCESS - Player: {id_text}, Equipment: {equip_id}, Player Index: {index}")
+
+        row_data[2].setStyleSheet(f"{background}; color: black; font-weight: bold; font-size: 12px;")
         self.udp.broadcast_equipment_id(equip_id)
+        if index < MAX_NUM_PLAYER_MINUSONE:
+            next_row = self.red_entries[index+1] if team == "RED" else self.green_entries[index+1]
+            next_row[0].setFocus()
 
     def clear_all_grids(self):
         confirmation_message = QMessageBox(self)
         confirmation_message.setWindowTitle("Confirm Reset")
         confirmation_message.setText("Are you ready for a New Game?")
-        confirmation_message.setIconPixmap(constants.logo_icon())
+        confirmation_message.setIcon(QMessageBox.Icon.Question)
         confirmation_message.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         confirmation_result = confirmation_message.exec()
         if confirmation_result == QMessageBox.StandardButton.No:
@@ -449,12 +481,12 @@ class MainWindow(QMainWindow):
                 for entry in self.red_entries[i]:
                     entry.clear()
                     entry.setReadOnly(entry != self.red_entries[i][0])
-                    entry.setStyleSheet(COOL_FONT)
+                    entry.setStyleSheet(RED_TEAM_BACKGROUND)
                     entry.setPlaceholderText("")
                 for entry in self.green_entries[i]:
                     entry.clear()
                     entry.setReadOnly(entry != self.green_entries[i][0])
-                    entry.setStyleSheet(COOL_FONT)
+                    entry.setStyleSheet(GREEN_TEAM_BACKGROUND)
                     entry.setPlaceholderText("")
 
     def keyPressEvent(self, event):
