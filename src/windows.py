@@ -1,6 +1,6 @@
 import socket
 import constants
-import testdb
+import database
 from PyQt6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
@@ -106,7 +106,7 @@ class UDPConfigWindow(QWidget):
         except OSError:
             QMessageBox.warning(self, "Network Error", "Unable to bind to the specified IP address.")
             return
-        self.main_window = MainWindow(udp, testdb)
+        self.main_window = MainWindow(udp, database)
         self.main_window.show()
         self.close()
 

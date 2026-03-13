@@ -125,7 +125,7 @@ BLURRED_LOGO_BACKGROUND = f"""
 # =========================================================
 VERTICAL_SPACING = 12
 COOL_FONT = "font-family: 'Courier New'; font-size: 16px; font-weight: bold; background-color: teal;"
-RED_TEAM_BACKGROUND = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: rgba(128, 0, 128, 64);"
+RED_TEAM_BACKGROUND = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: rgba(160, 0, 96, 64);"
 GREEN_TEAM_BACKGROUND = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: rgba(0, 128, 128, 64);"
 HORIZONTAL_SPACING = 20
 NETWORK_SECTION_HEIGHT = 30
