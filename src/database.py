@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2 import sql
 from util import validIndex, isDevMode
-from constants import MAX_NUM_PLAYER, NUM_TEAM
+from constants import CODENAME_ALREADY_EXISTS, CODENAME_CHANGE_ATTEMPT_MATCHES_EXISTING, ERROR_OCCURRED, EXISTING_CODENAME_UPDATED, MAX_NUM_PLAYER, NEW_CODENAME_ADDED, NUM_TEAM
 
 # Connection parameters
 connection_params = {
@@ -197,23 +197,76 @@ class DB:
         except Exception as e:
             print("DB error in is_registered:", e)
             return False
+    
+    def codename_exists(self, codename: str) -> bool:
+        self.ensure_db()
+        try:
+            self.cur.execute(
+                sql.SQL("SELECT EXISTS (SELECT 1 FROM players WHERE codename = {});").format(sql.Literal(codename))
+            )
+            return self.cur.fetchone()[0]
+        except Exception as e:
+            print("DB error in codename_exists:", e)
+            return False
+        
+    def get_codename(self, playerID: int):
+        self.ensure_db()
+        try:
+            self.cur.execute(
+                sql.SQL("SELECT codename FROM players WHERE id = {};").format(sql.Literal(playerID))
+            )
+            row = self.cur.fetchone()
+            if row is None:
+                return None
+            return row[0] if row[0] is not None else ""
+        except Exception as e:
+            print("DB error in get_codename:", e)
+            return None
 
-    def update_codename(self, playerID: int, codename: str) -> bool:
-        if self.is_registered(playerID):
-        # Update existing player
-            success = self.safe_exec(sql.SQL(
-                "UPDATE players SET codename = {} WHERE id = {};"
-                ).format(sql.Literal(codename), sql.Literal(playerID)))
+    def update_codename(self, playerID: int, codename: str) -> int:
+        if self.uf is None:
+            return ERROR_OCCURRED
+        if not self.is_registered(playerID):
+            try:
+                if self.codename_exists(codename):
+                    return CODENAME_ALREADY_EXISTS
+                # Add new player with the given codename and playerID
+                success = self.safe_exec(sql.SQL(
+                "INSERT INTO players (id, codename) VALUES ({}, {});"
+                ).format(sql.Literal(playerID), sql.Literal(codename)))
+                if success:
+                    # Show the updated table after insertion
+                    self.show_table()
+                    return NEW_CODENAME_ADDED
+                else:
+                    return ERROR_OCCURRED
+            except Exception as e:
+                if self.conn:
+                    self.conn.rollback()
+                print("DB error in update_codename:", e)
+                return ERROR_OCCURRED
         else:
-        # Insert new player
-            if self.uf is None or not self.uf.use(playerID):
-                return False
-            success = self.safe_exec(sql.SQL(
-            "INSERT INTO players (id, codename) VALUES ({}, {});"
-            ).format(sql.Literal(playerID), sql.Literal(codename)))
-        if success:
-            self.show_table()
-        return success
+            try:
+                if self.get_codename(playerID) == codename:
+                    return CODENAME_CHANGE_ATTEMPT_MATCHES_EXISTING
+                if self.codename_exists(codename):
+                    return CODENAME_ALREADY_EXISTS
+                # Update the codename for the existing player
+                self.cur.execute(
+                    sql.SQL("UPDATE players SET codename = {} WHERE id = {};").format(
+                        sql.Literal(codename), sql.Literal(playerID)
+                    )
+                )
+                self.conn.commit()
+                # Show the updated table after update
+                self.show_table()
+                return EXISTING_CODENAME_UPDATED
+                
+            except Exception as e:
+                if self.conn:
+                    self.conn.rollback()
+                print("DB error in update_codename:", e)
+                return ERROR_OCCURRED
 
     def queue_player(self, playerID: int, teamID: int, equipID: int) -> bool:
         if self.gm is None or not self.is_registered(playerID):
