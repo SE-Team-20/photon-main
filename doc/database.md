@@ -1,75 +1,60 @@
-# Method guide for src/database.py
+# Guide for database.py
 
-[quick link](../src/database.py)
+[quick link to database.py](../src/database.py)
 
-## 1. APIs
+## 1. public methods
 
 <table>
 <thread>
  <tr>
   <th>method name</th>
-  <th>purpose</th>
+  <th>feature</th>
   <th>input</th>
   <th>output</th>
  </tr>
 </thread>
 <tr>
  <td>close()</td>
- <td>close the database</td>
+ <td>close both the database and the temporary data</td>
  <td></td>
+ <td>True / False</td>
+</tr>
+<tr>
+ <td>isRegistered()</td>
  <td></td>
+ <td>player ID</td>
+ <td>codename / False</td>
 </tr>
 <tr>
- <td>set_player()</td>
- <td>assign a codename to the specific cell</td>
- <td>player ID, team ID, codename</td>
- <td>True/False</td>
+ <td>findNewPlayerID()</td>
+ <td>yields one player ID unused</td>
+ <td></td>
+ <td>player ID (not confirmed)</td>
 </tr>
 <tr>
- <td>update_score()</td>
- <td>applies a score change to a specific player</td>
- <td>difference, player ID, team ID</td>
- <td>True/False</td>
+ <td>usePlayerID()</td>
+ <td>add new player info to the permanent database; succeeds iff the input ID is yet to be registered to the database</td>
+ <td>player ID, codename</td>
+ <td>True / False</td>
 </tr>
 <tr>
- <td>get_leaderboard()</td>
- <td>gets an array representing a leaderboard of one team in non-decreasing order</td>
- <td>team ID</td>
- <td>tuples of {rank, codename, score}</td>
-</tr>
-<tr>
- <td>get_player_info()</td>
- <td>gets a player information from the equipment ID</td>
- <td>equipment ID</td>
- <td>a pair of {team ID, player ID}</td>
-</tr>
-<tr>
- <td>assign_equipment()</td>
- <td>associate an equipment ID to a player ID (no duplication)</td>
+ <td>addPlayerNextGame()</td>
+ <td>succeeds iff the player ID is registered to the database</td>
  <td>player ID, team ID, equipment ID</td>
- <td>True/False</td>
+ <td>True / False</td>
 </tr>
 <tr>
- <td>free_equipment()</td>
- <td>free an equipment from any players</td>
- <td>equipment ID</td>
- <td>True/False</td>
-</tr>
-<tr>
- <td>clear_equips()</td>
- <td>free every equipment</td>
+ <td>showTable()</td>
+ <td>debug: prints a full list of player infor registered to the database table on the CLI</td>
  <td></td>
- <td>True/False</td>
-</tr>
-<tr>
- <td>clear_players()</td>
- <td>re-initialize every player info</td>
- <td></td>
- <td>True/False</td>
+ <td>True / False</td>
 </tr>
 
 </table>
 
-## 2. Relational database structure
-1. player ID x team ID - codename - score
-2. equip ID - player ID x team ID
+## 2. Database structure
+1. player ID (primary key) - codename - highest score - # of games played
+
+## 3. Temporary data available in-game
+1. player ID - current score - team ID
+2. equipment ID - player ID

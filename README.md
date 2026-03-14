@@ -1,7 +1,29 @@
-# Photon main (team 20)
+sudo# Photon main (team 20)
 [quick link to the main branch](https://github.com/SE-Team-20/photon-main/tree/main)
 
-## File organization strategy
+## Quick Run Instructions (Linux)
+1. Fix line endings
+```
+sed -i 's/\r$//' install.sh run.sh
+```
+
+2. Make scripts executable:
+```
+chmod +x install.sh run.sh
+```
+
+3. Install software:
+```
+./install.sh
+```
+
+4. Launch main program:
+```
+./run.sh
+```
+
+
+## File organization
 
 <table>
 <thread>
@@ -23,20 +45,14 @@
 </tr>
 </table>
 
-## TODOs (week 2)
-by February 10th
-- [x] create splash screen (Thomas)
-- [ ] create player entry screen (Thomas)
-- [ ] link database to application (RyoB)
-- [ ] add two players via application
-- [ ] set up UDP sockets, broadcast equipment codes
-- [ ] have option to select different network for UDP sockets
-
---- 
-by 15th
-- [ ] include an install script to the repository
-- [ ] modify this readme to include the install instruction
-- [ ] enhance README
+## TODOs (Sprint 3)
+by March 15th
+- [x] create clear entries button (Thomas)
+- [ ] create play action entry screen - template button created, widget screen needs to be configured.
+- [ ] ensure inputted hardware IDs are carried over to the play action screen.
+- [x] update trello card assignments for all team members.
+- [ ] code up game start countdown timer in play action screen (for simplicity).
+- [x] ensure install script executes as expected in a fresh Linux environment.
 
 
 
