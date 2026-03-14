@@ -2,21 +2,13 @@ import socket
 import constants
 import database
 from PyQt6.QtWidgets import (
-    QMainWindow,
-    QVBoxLayout,
-    QLineEdit,
-    QLabel,
-    QWidget,
-    QPushButton,
-    QFormLayout,
-    QMessageBox,
-    QHBoxLayout,
-    QGridLayout,
-    QGraphicsDropShadowEffect,
+    QMainWindow, QVBoxLayout, QLineEdit, QLabel, QWidget, QPushButton,
+    QFormLayout, QMessageBox, QHBoxLayout, QGridLayout, QGraphicsDropShadowEffect,
+    QListWidget, QListWidgetItem
 )
 from udp_server import UDPServer
-from PyQt6.QtGui import QGuiApplication, QPainter, QBrush, QColor
-from PyQt6.QtCore import Qt, QTimer, QEvent
+from PyQt6.QtGui import QGuiApplication, QPainter, QBrush, QColor, QFont
+from PyQt6.QtCore import Qt, QTimer, QEvent, pyqtSignal
 from util import isDevMode
 from constants import *
 
@@ -118,7 +110,7 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowTitle("PHOTON")
         screen = QGuiApplication.primaryScreen().availableGeometry()
-        window_width = screen.width() * ASPECT_RATIO # 4:5 aspect ratio
+        window_width = screen.width() * ASPECT_RATIO
         window_height = screen.height() * ASPECT_RATIO
         x = (screen.width() - window_width) // 2
         y = (screen.height() - window_height) // 2
@@ -135,9 +127,9 @@ class MainWindow(QMainWindow):
         """)
         self.setCentralWidget(central_widget)
 
-        main_layout = QHBoxLayout(central_widget)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
+        team_layout = QHBoxLayout(central_widget)
+        team_layout.setContentsMargins(0, 0, 0, 0)
+        team_layout.setSpacing(0)
 
         self.left_container = QWidget()
         left_layout = QVBoxLayout(self.left_container)
@@ -190,8 +182,8 @@ class MainWindow(QMainWindow):
         right_layout.addStretch(1)
         right_layout.addWidget(self.green_panel, alignment=Qt.AlignmentFlag.AlignHCenter)
 
-        main_layout.addWidget(self.left_container, 1)
-        main_layout.addWidget(self.right_container, 1)
+        team_layout.addWidget(self.left_container, 1)
+        team_layout.addWidget(self.right_container, 1)
 
         self.red_index_labels = []
         self.green_index_labels = []
@@ -223,7 +215,7 @@ class MainWindow(QMainWindow):
         self.new_game_button.clicked.connect(self.clear_all_grids)
 
         # Start play action window
-        self.play_action_window = PlayActionWindow()
+        self.play_action_window = PlayActionWindow(self, self.udp)
         self.start_game_button = QPushButton("Start Game", self.centralWidget())
         self.start_game_button.setFixedSize(120, 60)
         window_height = self.height()
@@ -246,7 +238,6 @@ class MainWindow(QMainWindow):
         self.start_game_button.setGraphicsEffect(shadow)
         self.start_game_button.raise_()
         self.start_game_button.clicked.connect(self.show_play_action_window)
-
 
     def update_panel_sizes(self):
         w = self.width()
@@ -316,6 +307,26 @@ class MainWindow(QMainWindow):
         parent_layout.addLayout(player_entry_grid)
         return entries
 
+    def get_red_team_data(self):
+        red_team_data = []
+        for row in self.red_entries:
+            id_text = row[0].text().strip()
+            codename_text = row[1].text().strip()
+            equip_text = row[2].text().strip()
+            if id_text and codename_text and equip_text:
+                red_team_data.append((id_text, codename_text, equip_text))
+        return red_team_data
+
+    def get_green_team_data(self):
+        green_team_data = []
+        for row in self.green_entries:
+            id_text = row[0].text().strip()
+            codename_text = row[1].text().strip()
+            equip_text = row[2].text().strip()
+            if id_text and codename_text and equip_text:
+                green_team_data.append((id_text, codename_text, equip_text))
+        return green_team_data
+
     def on_id_enter(self, row_data, team, index):
         id_text = row_data[0].text().strip()
         index_labels = self.red_index_labels if team == "RED" else self.green_index_labels
@@ -368,7 +379,7 @@ class MainWindow(QMainWindow):
                 index_labels[index].setText("")
             else:
                 print("Failed deleting the player from database")
-            
+
         QLineEdit.keyPressEvent(row_data[0], event)
 
     def on_codename_enter(self, row_data, team, index):
@@ -444,12 +455,10 @@ class MainWindow(QMainWindow):
             msg.setText("A really unexpected error occurred. Try calling IT.")
             msg.setIcon(QMessageBox.Icon.Critical)
             msg.exec()
-            
-        
+
         if index < MAX_NUM_PLAYER_MINUSONE:
             this_row = self.red_entries[index] if team == "RED" else self.green_entries[index]
             this_row[2].setFocus()
-
 
     def on_row_submit(self, row_data, team, index):
         id_text = row_data[0].text().strip()
@@ -516,22 +525,312 @@ class MainWindow(QMainWindow):
             self.play_action_window.show()
         else:
             super().keyPressEvent(event)
-    
+
     def show_play_action_window(self):
+        self.play_action_window.refresh_players()
         self.play_action_window.show()
 
-class PlayActionWindow(QWidget):
-    def __init__(self):
+class PlayActionWindow(QMainWindow):
+    def __init__(self, main_window, udp_server):
         super().__init__()
+        self.main_window = main_window
+        self.udp = udp_server
+
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowTitle("PHOTON: Play Action")
+
+        # Same size as main window
         screen = QGuiApplication.primaryScreen().availableGeometry()
-        window_width = screen.width() * ASPECT_RATIO # 4:5 aspect ratio
+        window_width = screen.width() * ASPECT_RATIO
         window_height = screen.height() * ASPECT_RATIO
         x = (screen.width() - window_width) // 2
         y = (screen.height() - window_height) // 2
         self.setGeometry(int(x), int(y), int(window_width), int(window_height))
         self.setFixedSize(int(window_width), int(window_height))
+
+        central_widget = QWidget()
+        central_widget.setObjectName("PlayActionCentralWidget")
+        central_widget.setStyleSheet(f"""
+            #PlayActionCentralWidget {{
+                border-image: url('{BLURRED_LOGO}');
+                background-position: center;
+            }}
+        """)
+        self.setCentralWidget(central_widget)
+
+        # Main vertical layout
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
+
+        team_panel_layout = QHBoxLayout()
+        team_panel_layout.setContentsMargins(0, 0, 0, 0)
+        team_panel_layout.setSpacing(20)
+
+        self.red_panel = RedTeamPanel()
+        self.red_panel.setLayout(QVBoxLayout())
+        red_layout = self.red_panel.layout()
+        red_layout.setContentsMargins(15, 15, 15, 15)
+        red_layout.setSpacing(8)
+
+        self.red_label = QLabel("RED TEAM")
+        self.red_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        red_label_style = """
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            font-family: 'Audiowide', 'Orbitron', 'Courier New', sans-serif;
+            background-color: rgba(100, 0, 0, 150);
+            border-radius: 15px;
+            padding: 5px 15px;
+            margin: 5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        """
+        self.red_label.setStyleSheet(red_label_style)
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setOffset(0, 5)
+        shadow.setColor(QColor(0, 0, 0, 160))
+        self.red_label.setGraphicsEffect(shadow)
+        red_layout.addWidget(self.red_label)
+
+        self.red_grid = QGridLayout()
+        self.red_grid.setHorizontalSpacing(10)
+        self.red_grid.setVerticalSpacing(4)
+        red_layout.addLayout(self.red_grid)
+
+        self.green_panel = GreenTeamPanel()
+        self.green_panel.setLayout(QVBoxLayout())
+        green_layout = self.green_panel.layout()
+        green_layout.setContentsMargins(15, 15, 15, 15)
+        green_layout.setSpacing(8)
+
+        self.green_label = QLabel("GREEN TEAM")
+        self.green_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        green_label_style = """
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            font-family: 'Audiowide', 'Orbitron', 'Courier New', sans-serif;
+            background-color: rgba(0, 100, 0, 150);
+            border-radius: 15px;
+            padding: 5px 15px;
+            margin: 5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        """
+        self.green_label.setStyleSheet(green_label_style)
+        self.green_label.setGraphicsEffect(shadow)  # reuse shadow
+        green_layout.addWidget(self.green_label)
+
+        self.green_grid = QGridLayout()
+        self.green_grid.setHorizontalSpacing(10)
+        self.green_grid.setVerticalSpacing(4)
+        green_layout.addLayout(self.green_grid)
+
+        team_panel_layout.addWidget(self.red_panel, 1)
+        team_panel_layout.addWidget(self.green_panel, 1)
+
+        bottom_layout = QHBoxLayout()
+        bottom_layout.setContentsMargins(0, 0, 0, 0)
+        bottom_layout.setSpacing(20)
+
+        # Hit feed container
+        hit_feed_container = QWidget()
+        hit_feed_container.setObjectName("HitFeedContainer")
+        hit_feed_container.setStyleSheet("""
+            #HitFeedContainer {
+                background-color: rgba(0, 0, 0, 127);
+                border-radius: 15px;
+            }
+        """)
+        hit_feed_layout = QVBoxLayout(hit_feed_container)
+        hit_feed_layout.setContentsMargins(10, 10, 10, 10)
+
+        hit_feed_label = QLabel("Current Game Action")
+        hit_feed_label.setStyleSheet("color: white; font-weight: bold; font-size: 18px; font-family: 'Orbitron';")
+        hit_feed_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        hit_feed_layout.addWidget(hit_feed_label)
+
+        self.hit_list = QListWidget()
+        self.hit_list.setStyleSheet("""
+            QListWidget {
+                background-color: transparent;
+                color: white;
+                font-size: 14px;
+                font-family: 'Courier New';
+                border: none;
+            }
+            QListWidget::item {
+                padding: 2px;
+            }
+        """)
+        hit_feed_layout.addWidget(self.hit_list)
+
+        # Timer container
+        timer_container = QWidget()
+        timer_container.setObjectName("TimerContainer")
+        timer_container.setStyleSheet("""
+            #TimerContainer {
+                background-color: rgba(0, 0, 0, 127);
+                border-radius: 15px;
+            }
+        """)
+        timer_layout = QVBoxLayout(timer_container)
+        timer_layout.setContentsMargins(10, 10, 10, 10)
+
+        self.phase_label = QLabel("Players get ready!")
+        self.phase_label.setStyleSheet("color: white; font-weight: bold; font-size: 18px; font-family: 'Orbitron';")
+        self.phase_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        timer_layout.addWidget(self.phase_label)
+
+        self.time_display = QLabel("0:00")
+        self.time_display.setStyleSheet("color: #ffffaa; font-size: 36px; font-weight: bold; font-family: 'Orbitron';")
+        self.time_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        timer_layout.addWidget(self.time_display)
+
+        bottom_layout.addWidget(hit_feed_container, 2)
+        bottom_layout.addWidget(timer_container, 1)
+
+        # Add top and bottom halves to main layout with equal stretch
+        main_layout.addLayout(team_panel_layout, 1)
+        main_layout.addLayout(bottom_layout, 1)
+
+        # Data structures for score updates
+        self.score_labels = {}
+        self.player_scores = {}
+
+        # Timer for countdown
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_countdown)
+        self.remaining_seconds = 0
+        self.timer_state = "ready"
+
+        # Connect UDP score signal
+        if hasattr(self.udp, 'score_received'):
+            self.udp.score_received.connect(self.on_score_received)
+
+        # Example initial feed entries
+        self.add_hit("Scooby Doo hit Opus")
+        self.add_hit("Scooby Doo hit Opus")
+        self.add_hit("Scooby Doo hit Opus")
+        self.add_hit("Opus hit Scooby Doo")
+        self.add_hit("Opus hit the Base")
+        self.add_hit("Opus hit Scooby Doo")
+        self.add_hit("Opus hit Scooby Doo")
+
+    def add_hit(self, text):
+        item = QListWidgetItem(text)
+        item.setTextAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.hit_list.addItem(item)
+        self.hit_list.scrollToBottom()
+
+    def start_countdown(self):
+        self.timer_state = "ready"
+        self.phase_label.setText("Players get ready!")
+        self.remaining_seconds = 30
+        self.update_timer_display()
+        self.timer.start(1000)
+
+    def update_countdown(self):
+        self.remaining_seconds -= 1
+        self.update_timer_display()
+
+        if self.remaining_seconds <= 0:
+            if self.timer_state == "ready":
+                self.timer_state = "game"
+                self.phase_label.setText("Game on!")
+                self.remaining_seconds = 2
+                self.update_timer_display()
+            elif self.timer_state == "game":
+                self.timer.stop()
+                self.phase_label.setText("Game Over")
+                self.time_display.setText("0:00")
+                self.udp.broadcast_equipment_id(221)
+            else:
+                self.timer.stop()
+
+    def update_timer_display(self):
+        minutes = self.remaining_seconds // 60
+        seconds = self.remaining_seconds % 60
+        self.time_display.setText(f"{minutes}:{seconds:02d}")
+
+    def showEvent(self, event):
+        self.refresh_players()
+        self.start_countdown()
+        super().showEvent(event)
+
+    def refresh_players(self):
+        self._clear_grid(self.red_grid)
+        self._clear_grid(self.green_grid)
+        self.score_labels.clear()
+        self.player_scores.clear()
+
+        headers = ["ID", "Codename", "Equip", "Score"]
+        header_style = "color: white; font-weight: bold; font-size: 12px;"
+        for col, text in enumerate(headers):
+            header_red = QLabel(text)
+            header_red.setStyleSheet(header_style)
+            header_red.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.red_grid.addWidget(header_red, 0, col)
+
+            header_green = QLabel(text)
+            header_green.setStyleSheet(header_style)
+            header_green.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.green_grid.addWidget(header_green, 0, col)
+
+        red_data = self.main_window.get_red_team_data()
+        for row, (player_id, codename, equip_id) in enumerate(red_data, start=1):
+            self._add_player_row(self.red_grid, row, player_id, codename, equip_id, "red")
+
+        green_data = self.main_window.get_green_team_data()
+        for row, (player_id, codename, equip_id) in enumerate(green_data, start=1):
+            self._add_player_row(self.green_grid, row, player_id, codename, equip_id, "green")
+
+    def _clear_grid(self, grid):
+        while grid.count():
+            item = grid.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+    def _add_player_row(self, grid, row, player_id, codename, equip_id, team):
+        id_label = QLabel(str(player_id))
+        id_label.setStyleSheet("color: white; font-size: 12px;")
+        id_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid.addWidget(id_label, row, 0)
+
+        name_label = QLabel(codename)
+        name_label.setStyleSheet("color: white; font-size: 12px;")
+        name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid.addWidget(name_label, row, 1)
+
+        equip_label = QLabel(str(equip_id))
+        equip_label.setStyleSheet("color: #cccccc; font-size: 12px; font-weight: bold;")
+        equip_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid.addWidget(equip_label, row, 2)
+
+        score_label = QLabel("0")
+        score_label.setStyleSheet("color: #ffffaa; font-size: 14px; font-weight: bold;")
+        score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid.addWidget(score_label, row, 3)
+
+        equip_id_int = int(equip_id)
+        self.score_labels[equip_id_int] = (team, score_label)
+        self.player_scores[equip_id_int] = 0
+
+    def on_score_received(self, equip_id, points):
+        if equip_id in self.score_labels:
+            team, label = self.score_labels[equip_id]
+            self.player_scores[equip_id] += points
+            label.setText(str(self.player_scores[equip_id]))
+        else:
+            print(f"Warning: Score received for unknown equipment ID {equip_id}")
+
+    def reset_scores(self):
+        for equip_id in self.player_scores:
+            self.player_scores[equip_id] = 0
+            if equip_id in self.score_labels:
+                self.score_labels[equip_id][1].setText("0")
 
 class RedTeamPanel(QWidget):
     def paintEvent(self, event):
