@@ -1,4 +1,5 @@
 import socket
+import main
 
 DEFAULT_RECEIVE_IP = "0.0.0.0"     
 DEFAULT_BROADCAST_IP = "255.255.255.255"
@@ -31,6 +32,7 @@ class UDPServer:
 
     # broadcast equipment codes after each player addition
     def broadcast_equipment_id(self, equipment_id):
+        
         message = str(equipment_id).encode()
         self.send_socket.sendto(
             message,

@@ -746,6 +746,7 @@ class PlayActionWindow(QMainWindow):
                 self.phase_label.setText("Game Over")
                 self.time_display.setText("0:00")
                 self.udp.broadcast_equipment_id(221)
+                self.close_play_action_window()
             else:
                 self.timer.stop()
 
@@ -758,6 +759,9 @@ class PlayActionWindow(QMainWindow):
         self.refresh_players()
         self.start_countdown()
         super().showEvent(event)
+
+    def close_play_action_window(self):
+        self.hide()
 
     def refresh_players(self):
         self._clear_grid(self.red_grid)
