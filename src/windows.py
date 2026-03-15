@@ -739,7 +739,7 @@ class PlayActionWindow(QMainWindow):
             if self.timer_state == "ready":
                 self.timer_state = "game"
                 self.phase_label.setText("Game on!")
-                self.remaining_seconds = 2
+                self.remaining_seconds = 360
                 self.update_timer_display()
             elif self.timer_state == "game":
                 self.timer.stop()
