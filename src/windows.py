@@ -220,7 +220,7 @@ class MainWindow(QMainWindow):
         self.start_game_button.setFixedSize(120, 60)
         window_height = self.height()
         window_width = self.width()
-        self.start_game_button.move(window_width/2 - self.start_game_button.width()/2, 0)
+        self.start_game_button.move(int(window_width/2 - self.start_game_button.width()/2), 0)
         button_style = """
             background-color: rgba(40, 110, 230, 150);
             border-radius: 20px;
