@@ -2,6 +2,7 @@ sudo# Photon main (team 20)
 [quick link to the main branch](https://github.com/SE-Team-20/photon-main/tree/main)
 
 ## Quick Run Instructions (Linux)
+## nstall.sh has two versions—Mac and Windows. Please use the version appropriate for your system.
 1. Fix line endings
 ```
 sed -i 's/\r$//' install.sh run.sh
