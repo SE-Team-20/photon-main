@@ -5,17 +5,17 @@ sudo# Photon main (team 20)
 ## Install.sh has two versions—Mac and Windows. Please use the version appropriate for your system.
 1. Fix line endings
 ```
-sed -i 's/\r$//' install.sh run.sh
+sed -i 's/\r$//' ./<insert your install version>.sh run.sh
 ```
 
 2. Make scripts executable:
 ```
-chmod +x install.sh run.sh
+chmod +x <insert your install version>.sh run.sh
 ```
 
 3. Install software:
 ```
-./install.sh
+./<insert your install version>.sh
 ```
 
 4. Launch main program:
