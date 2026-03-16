@@ -2,7 +2,7 @@ sudo# Photon main (team 20)
 [quick link to the main branch](https://github.com/SE-Team-20/photon-main/tree/main)
 
 ## Quick Run Instructions (Linux)
-## Install.sh has two versions—Mac and Windows. Please use the version appropriate for your system.
+## Install.sh has two versions based on your native OS —Mac and Windows. Please use the version appropriate for your system.
 1. Fix line endings
 ```
 sed -i 's/\r$//' ./<insert your install version>.sh run.sh
@@ -49,10 +49,10 @@ chmod +x <insert your install version>.sh run.sh
 ## TODOs (Sprint 3)
 by March 15th
 - [x] create clear entries button (Thomas)
-- [ ] create play action entry screen - template button created, widget screen needs to be configured.
-- [ ] ensure inputted hardware IDs are carried over to the play action screen.
+- [x] create play action entry screen - template button created, widget screen needs to be configured.
+- [x] ensure inputted hardware IDs are carried over to the play action screen.
 - [x] update trello card assignments for all team members.
-- [ ] code up game start countdown timer in play action screen (for simplicity).
+- [x] code up game start countdown timer in play action screen (for simplicity).
 - [x] ensure install script executes as expected in a fresh Linux environment.
 
 
