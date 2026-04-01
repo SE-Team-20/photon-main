@@ -220,7 +220,7 @@ class MainWindow(QMainWindow):
         self.start_game_button.setFixedSize(120, 60)
         window_height = self.height()
         window_width = self.width()
-        self.start_game_button.move(window_width/2 - self.start_game_button.width()/2, 0)
+        self.start_game_button.move(int(window_width/2 - self.start_game_button.width()/2), 0)
         button_style = """
             background-color: rgba(40, 110, 230, 150);
             border-radius: 20px;
@@ -739,13 +739,14 @@ class PlayActionWindow(QMainWindow):
             if self.timer_state == "ready":
                 self.timer_state = "game"
                 self.phase_label.setText("Game on!")
-                self.remaining_seconds = 2
+                self.remaining_seconds = 360
                 self.update_timer_display()
             elif self.timer_state == "game":
                 self.timer.stop()
                 self.phase_label.setText("Game Over")
                 self.time_display.setText("0:00")
                 self.udp.broadcast_equipment_id(221)
+                self.close_play_action_window()
             else:
                 self.timer.stop()
 
@@ -758,6 +759,9 @@ class PlayActionWindow(QMainWindow):
         self.refresh_players()
         self.start_countdown()
         super().showEvent(event)
+
+    def close_play_action_window(self):
+        self.hide()
 
     def refresh_players(self):
         self._clear_grid(self.red_grid)

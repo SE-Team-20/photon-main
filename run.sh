@@ -1,7 +1,12 @@
 #!/bin/bash
-# Run Photon-Main software
+# Move to the directory where the script is located
+cd "$(dirname "$0")"
 
-source venv/bin/activate
-
-# Run the main program
-python3 main.py
+if [ -d "venv" ]; then
+    source venv/bin/activate
+    echo "Environment activated. Launching Photon..."
+    python3 main.py
+else
+    echo "Error: venv not found. Please run ./install.sh first."
+    exit 1
+fi
