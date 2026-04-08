@@ -51,7 +51,7 @@ chmod +x <your install version>.sh run.sh
 </table>
 
 ## TODOs (Sprint 4)
-by March 15th
+by April 19th
 - [ ] implement UDP server logic, run game using traffic_generator.py (Ali)
 - [ ] update score in scoreboard on socket recvfrom() (Thomas)
 - [ ] add base icon to player hitting base in scoreboard (Ryoji)
