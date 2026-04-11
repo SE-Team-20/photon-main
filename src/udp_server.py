@@ -1,6 +1,7 @@
 import socket
 import threading
 from model import Model
+from interface import Server
 
 DEFAULT_RECEIVE_IP = "0.0.0.0"     
 DEFAULT_BROADCAST_IP = "255.255.255.255"

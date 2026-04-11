@@ -1,8 +1,8 @@
-from udp_server import UDPServer
+from interface import Server
 
 class Model:
-  def __init__(self, udp_server:UDPServer):
-    self.udp=udp_server
+  def __init__(self, server:Server):
+    self.udp=server
   
   def handleInput(self, input: str) -> bool:
     parts = input.split(':')
