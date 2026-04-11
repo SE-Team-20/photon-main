@@ -725,9 +725,9 @@ class PlayActionWindow(QMainWindow):
     def start_countdown(self):
         self.timer_state = "ready"
         self.phase_label.setText("Players get ready!")
-        self.remaining_seconds = 30
+        self.remaining_seconds = 0 if isDevMode() else 30
         self.update_timer_display()
-        self.timer.start(1000)
+        self.timer.start(999999 if isDevMode() else 1000)
 
     def update_countdown(self):
         self.remaining_seconds -= 1
