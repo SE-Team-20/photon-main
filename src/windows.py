@@ -103,7 +103,7 @@ class UDPConfigWindow(QWidget):
         self.close()
 
 class MainWindow(QMainWindow):
-    def __init__(self, udp_server, db):
+    def __init__(self, udp_server: UDPServer, db):
         self.udp = udp_server
         self.db = db
         super().__init__()
@@ -531,7 +531,7 @@ class MainWindow(QMainWindow):
         self.play_action_window.show()
 
 class PlayActionWindow(QMainWindow):
-    def __init__(self, main_window, udp_server):
+    def __init__(self, main_window, udp_server:UDPServer):
         super().__init__()
         self.main_window = main_window
         self.udp = udp_server
@@ -728,6 +728,11 @@ class PlayActionWindow(QMainWindow):
         self.remaining_seconds = 0 if isDevMode() else 30
         self.update_timer_display()
         self.timer.start(1000) # interval_ms (should be fixed)
+    
+    def start_game(self):
+        # send a signal to the clients and activate the udp server
+        self.udp.announce_game_start()
+        self.udp.start_readloop()
 
     def update_countdown(self):
         self.remaining_seconds -= 1
@@ -735,6 +740,7 @@ class PlayActionWindow(QMainWindow):
 
         if self.remaining_seconds <= 0:
             if self.timer_state == "ready":
+                self.start_game()
                 self.timer_state = "game"
                 self.phase_label.setText("Game on!")
                 self.remaining_seconds = 30 if isDevMode() else 360
