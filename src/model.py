@@ -37,23 +37,22 @@ class Model:
     self._handleDigitPair(int(parts[0]), int(parts[1]))
     return True
   
-  # TODO: fix this
+  # TODO: needs to implemented
   # return a value exactly how it's stored in the database class
   def _getPlayerID(self, equip_id: int) -> int:
     return 0
   
-  # TODO: fix this
+  # TODO: needs to be implemented
   # return either 0 or 1 (red or green)
   def _getTeamID(self, equip_id: int) -> int:
     return equip_id%2
 
-  # TODO: fix this
+  # TODO: needs to be implemented
   # should be stored permanently / reflected on the leaderboard
   def _grantScore(self, player_id: int, diff: int) -> bool:
     return False
 
   # should call methods at self.udp based on the situation
-  # TODO: add some logics and turn this viable
   def _handleDigitPair(self, a: int, b: int):
     print("[MODEL]: _handleDigitPair not implemented yet")
 
@@ -62,7 +61,7 @@ class Model:
     # base event
     if(b in ["43", "53"]):
       playerA = self._getPlayerID(a)
-      if(b=="43" and RED==self._getTeamID(playerA) or a=="53" and GREEN==self._getTeamID(playerA)):
+      if(b=="43" and RED==self._getTeamID(a) or a=="53" and GREEN==self._getTeamID(a)):
         self._insertBasedPlayerID(playerA)
         self._grantScore(playerA, 100)
       return
@@ -70,5 +69,13 @@ class Model:
     # pvp event
     playerB=self._getPlayerID(b)
 
-    #TODO: do something
-    
+    if self._getTeamID(a) != self._getTeamID(b):
+      # TODO: stun playerB on hit
+      # TODO: grant score to playerA
+      print("normal combat not implemented")
+    else:
+      # TODO: do NOT stun playerB (or as an instruction specifies)
+      # TODO: grant penalty to playerA
+      #TODO: call udp server to do something
+      print("handling friendly fire not implemented")
+
