@@ -19,6 +19,7 @@ class UDPServer:
     ):
         self.receive_ip = receive_ip
         self.broadcast_ip = broadcast_ip
+        self.model = None
 
         # socket for receiving data 
         self.recv_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
