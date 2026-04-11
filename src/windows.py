@@ -18,16 +18,16 @@ class UDPConfigWindow(QWidget):
         self.setWindowTitle("Photon - Network Configuration")
         self.resize(window_size)
         self.setObjectName("ConfigWindow")
-        self.setStyleSheet("""
-            #ConfigWindow {
+        self.setStyleSheet(f"""
+            #ConfigWindow {{
                 background-color: black;
-            }
-            QLabel {
+            }}
+            QLabel {{
                 color: white;
                 font-family: Arial;
                 font-size: 14px;
-            }
-            QLineEdit {
+            }}
+            QLineEdit {{
                 background-color: {SEMI_TRANSPARENT_BLACK};
                 border: 1px solid {DARK_GREY};
                 padding: 8px;
@@ -35,18 +35,18 @@ class UDPConfigWindow(QWidget):
                 color: white;
                 font-size: 14px;
                 min-width: 220px;
-            }
-            QPushButton {
+            }}
+            QPushButton {{
                 background-color: {DEEP_RED};
                 padding: 10px 25px;
                 border-radius: 6px;
                 font-weight: bold;
                 font-size: 16px;
                 color: white;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: {LIGHT_RED};
-            }
+            }}
         """)
         layout = QVBoxLayout(self)
         layout.addStretch()
