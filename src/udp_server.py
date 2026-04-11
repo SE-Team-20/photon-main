@@ -1,5 +1,5 @@
 import socket
-import main
+import threading
 
 DEFAULT_RECEIVE_IP = "0.0.0.0"     
 DEFAULT_BROADCAST_IP = "255.255.255.255"
@@ -58,7 +58,32 @@ class UDPServer:
 
     def start_readloop(self):
         print("[UDP] started a read-loop")
+
+        self._running=True
+        self._thread = threading.Thread(target=self._readloop, daemon=True)
+        self._thread.start()
+    
+    def _readloop(self):
+        while self._running:
+            try:
+                data, addr = self.recv_socket.recvfrom(BUFFER_SIZE)
+                self.on_receive(data, addr)
+            except OSError:
+                break
+
+    # TODO: more features
+    def on_receive(self, data, addr):
+        print(f"[UDP] recv: {data} from {addr}")
     
     def end_readloop(self):
         print("[UDP] ended a read-loop")
+        self._running=False
 
+        try:
+            self.recv_socket.close()
+        except:
+            pass
+        
+        if hasattr(self, "_thread"):
+            self._thread.join(timeout=1)
+    
