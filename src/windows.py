@@ -584,7 +584,6 @@ class PlayActionWindow(QMainWindow):
             border-radius: 15px;
             padding: 5px 15px;
             margin: 5px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
         """
         self.red_label.setStyleSheet(red_label_style)
         shadow = QGraphicsDropShadowEffect()
@@ -616,7 +615,6 @@ class PlayActionWindow(QMainWindow):
             border-radius: 15px;
             padding: 5px 15px;
             margin: 5px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
         """
         self.green_label.setStyleSheet(green_label_style)
         self.green_label.setGraphicsEffect(shadow)  # reuse shadow
