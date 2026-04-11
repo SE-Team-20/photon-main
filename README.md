@@ -50,14 +50,14 @@ chmod +x <your install version>.sh run.sh
 </tr>
 </table>
 
-## TODOs (Sprint 3)
-by March 15th
-- [x] create clear entries button (Thomas)
-- [x] create play action entry screen - template button created, widget screen needs to be configured.
-- [x] ensure inputted hardware IDs are carried over to the play action screen.
-- [x] update trello card assignments for all team members.
-- [x] code up game start countdown timer in play action screen (for simplicity).
-- [x] ensure install script executes as expected in a fresh Linux environment.
+## TODOs (Sprint 4)
+by April 19th
+- [ ] implement UDP server logic, run game using traffic_generator.py (Ali)
+- [ ] update score in scoreboard on socket recvfrom() (Thomas)
+- [ ] add base icon to player hitting base in scoreboard (Ryoji)
+- [ ] implement friendly fire logic (Ryoji)
+- [ ] add random music throughout game action (Wahid)
+- [ ] clean up UI and debug existing minor faults (Thomas and Ryoji)
 
 
 

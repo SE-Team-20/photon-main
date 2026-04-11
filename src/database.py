@@ -223,6 +223,7 @@ class DB:
             print("DB error in get_codename:", e)
             return None
 
+    # omniscient integer return codename event handler
     def update_codename(self, playerID: int, codename: str) -> int:
         if self.uf is None:
             return ERROR_OCCURRED
