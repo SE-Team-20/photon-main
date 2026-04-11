@@ -1,5 +1,5 @@
 from interface import Server
-from database import Database
+from database import DataBase
 
 # 
 # core purpose: handling data between a server and clients
@@ -8,7 +8,7 @@ class Model:
   GREEN = 0
   RED = 1
 
-  def __init__(self, server:Server, database:Database):
+  def __init__(self, server:Server, database:DataBase):
     self.udp=server
     self.db=database
     self.basedq = []
