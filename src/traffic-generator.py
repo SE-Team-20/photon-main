@@ -2,6 +2,8 @@ import socket
 import random
 import time
 
+from src.util import isDevMode
+
 bufferSize = 1024
 friendly_fire = 0
 serverAddressPort = ("0.0.0.0", 7500)
@@ -12,16 +14,10 @@ print("this program will generate some test traffic for 2 players on the red ")
 print("team as well as 2 players on the green team")
 print("")
 
-# red1 = input("Enter equipment id of red player 1 ==> ")
-# red2 = input("Enter equipment id of red player 2 ==> ")
-# green1 = input("Enter equipment id of green player 1 ==> ")
-# green2 = input("Enter equipment id of green player 2 ==> ")
-
-red1 = "1"
-red2 = "3"
-green1 = "2"
-green2 = "4"
-
+red1 = "1" if isDevMode() else input("Enter equipment id of red player 1 ==> ")
+red2 = "3" if isDevMode() else input("Enter equipment id of red player 2 ==> ")
+green1 = "2" if isDevMode() else input("Enter equipment id of green player 1 ==> ")
+green2 = "4" if isDevMode() else input("Enter equipment id of green player 2 ==> ")
 
 # Create datagram sockets
 UDPServerSocketReceive = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
