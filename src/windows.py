@@ -727,7 +727,7 @@ class PlayActionWindow(QMainWindow):
         self.phase_label.setText("Players get ready!")
         self.remaining_seconds = 0 if isDevMode() else 30
         self.update_timer_display()
-        self.timer.start(999999 if isDevMode() else 1000)
+        self.timer.start(1000) # interval_ms (should be fixed)
 
     def update_countdown(self):
         self.remaining_seconds -= 1
@@ -737,7 +737,7 @@ class PlayActionWindow(QMainWindow):
             if self.timer_state == "ready":
                 self.timer_state = "game"
                 self.phase_label.setText("Game on!")
-                self.remaining_seconds = 360
+                self.remaining_seconds = 30 if isDevMode() else 360
                 self.update_timer_display()
             elif self.timer_state == "game":
                 self.timer.stop()
