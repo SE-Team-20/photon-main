@@ -1,5 +1,6 @@
 import socket
 import threading
+from model import Model
 
 DEFAULT_RECEIVE_IP = "0.0.0.0"     
 DEFAULT_BROADCAST_IP = "255.255.255.255"
@@ -60,13 +61,17 @@ class UDPServer:
     # Receival
     # ==========================
 
-    # TODO: more features
     def on_receive(self, data:bytes, addr):
         data=data.decode()
         print(f"[UDP] recv: {data} from {addr}")
+        if not self.model.handleInput(data):
+            print(f"[UDP] Error: unsupported request from client: {data}")
 
     def start_readloop(self):
         print("[UDP] started a read-loop")
+
+        if not self.model:
+            self.model = Model(self)
 
         self._running=True
         self._thread = threading.Thread(target=self._readloop, daemon=True)
