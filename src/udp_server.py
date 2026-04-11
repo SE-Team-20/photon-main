@@ -44,8 +44,12 @@ class UDPServer:
         )
     
     def announce_game_start(self):
-        self.broadcast("201")
-        print(f"[UDP] Broadcasted a signal 201, meaning that the game is began")
+        self.broadcast("202")
+        print(f"[UDP] Broadcasted a signal 202, meaning that the game is began")
+    
+    def announce_game_end(self):
+        self.broadcast("221")
+        print(f"[UDP] Broadcasted a signal 221, meaning that the game is end")
 
     # broadcast equipment codes after each player addition
     def broadcast_equipment_id(self, equipment_id):
@@ -55,6 +59,11 @@ class UDPServer:
     # ==========================
     # Receival
     # ==========================
+
+    # TODO: more features
+    def on_receive(self, data:bytes, addr):
+        data=data.decode()
+        print(f"[UDP] recv: {data} from {addr}")
 
     def start_readloop(self):
         print("[UDP] started a read-loop")
@@ -70,10 +79,6 @@ class UDPServer:
                 self.on_receive(data, addr)
             except OSError:
                 break
-
-    # TODO: more features
-    def on_receive(self, data, addr):
-        print(f"[UDP] recv: {data} from {addr}")
     
     def end_readloop(self):
         print("[UDP] ended a read-loop")
