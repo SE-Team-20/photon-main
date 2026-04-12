@@ -75,6 +75,12 @@ class UDPConfigWindow(QWidget):
         layout.addStretch()
         self.main_window = None
 
+        # shortcut
+        if isDevMode():
+            self.start_system()
+            self.close()
+            return
+
     def validate_ip(self, ip):
         try:
             socket.inet_aton(ip)
@@ -815,26 +821,28 @@ class PlayActionWindow(QMainWindow):
             if widget:
                 widget.deleteLater()
 
+    # note: I changed all the index by +1 to insert a baseicon (maybe leading to an index overflow based on how PyQt works)
+    # TODO: 
     def _add_player_row(self, grid, row, player_id, codename, equip_id, team):
         id_label = QLabel(str(player_id))
         id_label.setStyleSheet("color: white; font-size: 12px;")
         id_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(id_label, row, 0)
+        grid.addWidget(id_label, row, 1)
 
         name_label = QLabel(codename)
         name_label.setStyleSheet("color: white; font-size: 12px;")
         name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(name_label, row, 1)
+        grid.addWidget(name_label, row, 2)
 
         equip_label = QLabel(str(equip_id))
         equip_label.setStyleSheet("color: #cccccc; font-size: 12px; font-weight: bold;")
         equip_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(equip_label, row, 2)
+        grid.addWidget(equip_label, row, 3)
 
         score_label = QLabel("0")
         score_label.setStyleSheet("color: #ffffaa; font-size: 14px; font-weight: bold;")
         score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(score_label, row, 3)
+        grid.addWidget(score_label, row, 4)
 
         equip_id_int = int(equip_id)
         self.score_labels[equip_id_int] = (team, score_label)
