@@ -15,6 +15,7 @@ class Model:
     self.basedq = deque()
     self.basedset = set()
     self.messageq = deque()
+    self.scorediffq = deque()
 
   def basedPlayerCount(self):
     return len(self.basedq)
@@ -25,6 +26,9 @@ class Model:
   # called every frame by window.py
   def pop_based_equip_id(self):
     return self.basedq.popleft() if self.basedq else False
+
+  def pop_score_diff(self):
+    return self.scorediffq.popleft() if self.scorediffq else False
 
   # this will be called by self.handleInput()
   def _insertBasedEquipID(self, id):
@@ -59,10 +63,8 @@ class Model:
   def _getTeamID(self, equip_id: int) -> int:
     return equip_id%2
 
-  # TODO: needs to be implemented
-  # should be stored permanently / reflected on the leaderboard
-  def _grantScore(self, equip_id: int, diff: int) -> bool:
-    return False
+  def _grant_score(self, equip_id: int, diff: int):
+    self.scorediffq.append((equip_id, diff))
 
   # should call methods at self.udp based on the situation
   def _handleDigitPair(self, equipA: int, b: int):
@@ -73,7 +75,7 @@ class Model:
     if(b in ["43", "53"]):
       if(b=="43" and RED==self._getTeamID(equipA) or a=="53" and GREEN==self._getTeamID(equipA)):
         self._insertBasedEquipID(equipA)
-        self._grantScore(equipA, 100)
+        self._grant_score(equipA, 100)
       return
     
     # pvp event

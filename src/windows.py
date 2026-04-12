@@ -752,8 +752,14 @@ class PlayActionWindow(QMainWindow):
         while(equip_id := self.model.pop_based_equip_id()) is not False:
             self.grant_baseicon(equip_id)
         
+        # play texts
         while(message := self.model.pop_live_message()) is not False:
             self.add_hit(message)
+        
+        # apply a score change
+        while(res := self.model.pop_score_diff()) is not False:
+            equip_id, diff = res
+            self.reflect_score_change(equip_id, diff)
 
         # TODO: remove the line below once above seems working
         self.add_hit("Ryoji is hit by Dr.Strother")
@@ -886,7 +892,7 @@ class PlayActionWindow(QMainWindow):
         
         print("baseicon is now refected to " + equip_id)
 
-    def reflect_score(self, equip_id, diff):
+    def reflect_score_change(self, equip_id, diff):
         if equip_id not in self.score_labels:
             print(f"Warning: Score received for unknown equipment ID {equip_id}")
             return
