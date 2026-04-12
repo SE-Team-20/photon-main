@@ -101,14 +101,15 @@ class UDPConfigWindow(QWidget):
         except OSError:
             QMessageBox.warning(self, "Network Error", "Unable to bind to the specified IP address.")
             return
-        self.main_window = MainWindow(udp, database)
+        self.main_window = MainWindow(udp, self.model)
         self.main_window.show()
         self.close()
 
 class MainWindow(QMainWindow):
-    def __init__(self, udp_server: UDPServer, db):
+    def __init__(self, udp_server: UDPServer, model: Model):
         self.udp = udp_server
-        self.db = db
+        self.model = model
+        self.db = database
         super().__init__()
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowTitle("PHOTON")
@@ -218,7 +219,7 @@ class MainWindow(QMainWindow):
         self.new_game_button.clicked.connect(self.clear_all_grids)
 
         # Start play action window
-        self.play_action_window = PlayActionWindow(self, self.udp)
+        self.play_action_window = PlayActionWindow(self, self.udp, self.model)
         self.start_game_button = QPushButton("Start Game", self.centralWidget())
         self.start_game_button.setFixedSize(120, 60)
         window_height = self.height()
@@ -534,10 +535,11 @@ class MainWindow(QMainWindow):
         self.play_action_window.show()
 
 class PlayActionWindow(QMainWindow):
-    def __init__(self, main_window, udp_server:UDPServer):
+    def __init__(self, main_window, udp_server:UDPServer, model:Model):
         super().__init__()
         self.main_window = main_window
         self.udp = udp_server
+        self.model = model
 
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowTitle("PHOTON: Play Action")
@@ -702,13 +704,9 @@ class PlayActionWindow(QMainWindow):
 
         # Timer for countdown
         self.timer = QTimer()
-        self.timer.timeout.connect(self.update_countdown)
+        self.timer.timeout.connect(self.update)
         self.remaining_seconds = 0
         self.timer_state = "ready"
-
-        # Connect UDP score signal
-        if hasattr(self.udp, 'score_received'):
-            self.udp.score_received.connect(self.on_score_received)
 
         # Example initial feed entries
         self.add_hit("Scooby Doo hit Opus")
@@ -736,6 +734,19 @@ class PlayActionWindow(QMainWindow):
         # send a signal to the clients and activate the udp server
         self.udp.announce_game_start()
         self.udp.start_readloop()
+    
+    def update(self):
+        self.update_countdown()
+        self.update_leaderboard()
+
+    def update_leaderboard(self):
+        print("updating leaderboard...")
+        while self.model.basedPlayerCount()>0:
+            playerID = self.model.popBasedPlayerID()
+            print(playerID + " is granted a baseicon")
+            # 1. find a row corresponding to the player ID
+            # 2. update it to add a baseicon
+        
 
     def update_countdown(self):
         self.remaining_seconds -= 1
@@ -828,14 +839,21 @@ class PlayActionWindow(QMainWindow):
         equip_id_int = int(equip_id)
         self.score_labels[equip_id_int] = (team, score_label)
         self.player_scores[equip_id_int] = 0
+    
+    # TODO: 
+    def grant_baseicon(self, player_id):
+        print("not implmeneted")
 
-    def on_score_received(self, equip_id, points):
-        if equip_id in self.score_labels:
-            team, label = self.score_labels[equip_id]
-            self.player_scores[equip_id] += points
-            label.setText(str(self.player_scores[equip_id]))
-        else:
+    # TODO: 
+    # note: it was an assignment instead before a change to manage within window class
+    def reflect_score(self, equip_id, points):
+        if equip_id not in self.score_labels:
             print(f"Warning: Score received for unknown equipment ID {equip_id}")
+            return
+        
+        _, label = self.score_labels[equip_id]
+        self.player_scores[equip_id] = points
+        label.setText(str(points))
 
     def reset_scores(self):
         for equip_id in self.player_scores:

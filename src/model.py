@@ -13,6 +13,9 @@ class Model:
     # self.db=database
     self.basedq = []
     self.basedset = set()
+
+  def basedPlayerCount(self):
+    return len(self.basedq)
   
   # called every frame by window.py
   def popBasedPlayerID(self):
