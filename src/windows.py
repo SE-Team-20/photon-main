@@ -715,13 +715,13 @@ class PlayActionWindow(QMainWindow):
         self.timer_state = "ready"
 
         # Example initial feed entries
-        self.add_hit("Scooby Doo hit Opus")
-        self.add_hit("Scooby Doo hit Opus")
-        self.add_hit("Scooby Doo hit Opus")
-        self.add_hit("Opus hit Scooby Doo")
-        self.add_hit("Opus hit the Base")
-        self.add_hit("Opus hit Scooby Doo")
-        self.add_hit("Opus hit Scooby Doo")
+        # self.add_hit("Scooby Doo hit Opus")
+        # self.add_hit("Scooby Doo hit Opus")
+        # self.add_hit("Scooby Doo hit Opus")
+        # self.add_hit("Opus hit Scooby Doo")
+        # self.add_hit("Opus hit the Base")
+        # self.add_hit("Opus hit Scooby Doo")
+        # self.add_hit("Opus hit Scooby Doo")
 
     def add_hit(self, text):
         item = QListWidgetItem(text)
@@ -747,11 +747,14 @@ class PlayActionWindow(QMainWindow):
 
     def update_leaderboard(self):
         print("updating leaderboard...")
+
+        # apply a baseicon
         while self.model.basedPlayerCount()>0:
-            playerID = self.model.popBasedPlayerID()
-            print(playerID + " is granted a baseicon")
-            # 1. find a row corresponding to the player ID
-            # 2. update it to add a baseicon
+            self.grant_baseicon(self.model.popBasedPlayerID())
+
+        # play the string
+        # TODO: fix this by pulling a string from a pool that model has
+        self.add_hit("Ryoji is hit by Dr.Strother")
         
 
     def update_countdown(self):
@@ -824,6 +827,15 @@ class PlayActionWindow(QMainWindow):
     # note: I changed all the index by +1 to insert a baseicon (maybe leading to an index overflow based on how PyQt works)
     # TODO: 
     def _add_player_row(self, grid, row, player_id, codename, equip_id, team):
+        icon = QLabel()
+        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon.setScaledContents(False)
+
+        layout = QVBoxLayout(icon)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.addWidget(icon)
+        grid.addWidget(icon, row, 0)
+
         id_label = QLabel(str(player_id))
         id_label.setStyleSheet("color: white; font-size: 12px;")
         id_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -847,10 +859,30 @@ class PlayActionWindow(QMainWindow):
         equip_id_int = int(equip_id)
         self.score_labels[equip_id_int] = (team, score_label)
         self.player_scores[equip_id_int] = 0
+        self.icon_labels[equip_id_int] = icon
     
-    # TODO: 
-    def grant_baseicon(self, player_id):
-        print("not implmeneted")
+    # TODO: check if it works
+    def grant_baseicon(self, equip_id):
+        if equip_id not in self.icon_labels:
+            print(f"Warning: baseicon request received for unknown equipment ID {equip_id}")
+            return
+        label = self.icon_labels[equip_id]
+        pixmap = QPixmap('../assets/images/baseicon.jpg')
+
+        if pixmap.isNull():
+            label.clear()
+            return
+        target_size = 32
+        scaled = pixmap.scaled(
+            target_size,
+            target_size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
+
+        label.setPixmap(scaled)
+        
+        print("baseicon is now refected to " + equip_id)
 
     # TODO: 
     # note: it was an assignment instead before a change to manage within window class

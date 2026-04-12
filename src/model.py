@@ -18,13 +18,13 @@ class Model:
     return len(self.basedq)
   
   # called every frame by window.py
-  def popBasedPlayerID(self):
+  def popBasedEquipID(self):
     if len(self.basedq)==0:
       return False
     return self.basedq[0]
 
   # this will be called by self.handleInput()
-  def _insertBasedPlayerID(self, id):
+  def _insertBasedEquipID(self, id):
     if self.basedset in id:
       return
     self.basedset.add(id)
@@ -52,27 +52,25 @@ class Model:
 
   # TODO: needs to be implemented
   # should be stored permanently / reflected on the leaderboard
-  def _grantScore(self, player_id: int, diff: int) -> bool:
+  def _grantScore(self, equip_id: int, diff: int) -> bool:
     return False
 
   # should call methods at self.udp based on the situation
-  def _handleDigitPair(self, a: int, b: int):
+  def _handleDigitPair(self, equipA: int, b: int):
     print("[MODEL]: _handleDigitPair not implemented yet")
 
-    playerA=self._getPlayerID(a)
     
     # base event
     if(b in ["43", "53"]):
-      playerA = self._getPlayerID(a)
-      if(b=="43" and RED==self._getTeamID(a) or a=="53" and GREEN==self._getTeamID(a)):
-        self._insertBasedPlayerID(playerA)
-        self._grantScore(playerA, 100)
+      if(b=="43" and RED==self._getTeamID(equipA) or a=="53" and GREEN==self._getTeamID(equipA)):
+        self._insertBasedEquipID(equipA)
+        self._grantScore(equipA, 100)
       return
     
     # pvp event
-    playerB=self._getPlayerID(b)
+    equipB=b
 
-    if self._getTeamID(a) != self._getTeamID(b):
+    if self._getTeamID(equipA) != self._getTeamID(equipB):
       # TODO: stun playerB on hit
       # TODO: grant score to playerA
       print("normal combat not implemented")
