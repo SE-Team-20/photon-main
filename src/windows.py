@@ -749,11 +749,13 @@ class PlayActionWindow(QMainWindow):
         print("updating leaderboard...")
 
         # apply a baseicon
-        while self.model.basedPlayerCount()>0:
-            self.grant_baseicon(self.model.popBasedPlayerID())
+        while(equip_id := self.model.pop_based_equip_id()) is not False:
+            self.grant_baseicon(equip_id)
+        
+        while(message := self.model.pop_live_message()) is not False:
+            self.add_hit(message)
 
-        # play the string
-        # TODO: fix this by pulling a string from a pool that model has
+        # TODO: remove the line below once above seems working
         self.add_hit("Ryoji is hit by Dr.Strother")
         
 

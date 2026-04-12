@@ -1,4 +1,5 @@
 from interface import Server
+from collections import deque
 # from database import DataBase
 
 # 
@@ -11,17 +12,19 @@ class Model:
   def __init__(self, server:Server):
     self.udp=server
     # self.db=database
-    self.basedq = []
+    self.basedq = deque()
     self.basedset = set()
+    self.messageq = deque()
 
   def basedPlayerCount(self):
     return len(self.basedq)
   
+  def pop_live_message(self):
+    return self.messageq.popleft() if self.messageq else False
+  
   # called every frame by window.py
-  def popBasedEquipID(self):
-    if len(self.basedq)==0:
-      return False
-    return self.basedq[0]
+  def pop_based_equip_id(self):
+    return self.basedq.popleft() if self.basedq else False
 
   # this will be called by self.handleInput()
   def _insertBasedEquipID(self, id):
@@ -29,6 +32,12 @@ class Model:
       return
     self.basedset.add(id)
     self.basedq.append(id)
+  
+  def _insertLiveMessage(self, string:str, emergent=False):
+    if emergent:
+      self.messageq.appendleft(string)
+    else:
+      self.messageq.append(string)
 
   #  called by UDPServer in need
   def handleInput(self, input: str) -> bool:
