@@ -886,16 +886,14 @@ class PlayActionWindow(QMainWindow):
         
         print("baseicon is now refected to " + equip_id)
 
-    # TODO: 
-    # note: it was an assignment instead before a change to manage within window class
-    def reflect_score(self, equip_id, points):
+    def reflect_score(self, equip_id, diff):
         if equip_id not in self.score_labels:
             print(f"Warning: Score received for unknown equipment ID {equip_id}")
             return
         
         _, label = self.score_labels[equip_id]
-        self.player_scores[equip_id] = points
-        label.setText(str(points))
+        self.player_scores[equip_id] += diff
+        label.setText(str(self.player_scores[equip_id]))
 
     def reset_scores(self):
         for equip_id in self.player_scores:
