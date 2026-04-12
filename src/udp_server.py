@@ -15,11 +15,10 @@ class UDPServer:
     def __init__(
         self,
         receive_ip=DEFAULT_RECEIVE_IP,
-        broadcast_ip=DEFAULT_BROADCAST_IP
+        broadcast_ip=DEFAULT_BROADCAST_IP,
     ):
         self.receive_ip = receive_ip
         self.broadcast_ip = broadcast_ip
-        self.model = None
 
         # socket for receiving data 
         self.recv_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -33,8 +32,14 @@ class UDPServer:
             1
         )
 
+        # model
+        self.model = None
+
         print(f"[UDP] Receiving on {self.receive_ip}:{CLIENT_PORT}")
         print(f"[UDP] Broadcasting on {self.broadcast_ip}:{SERVER_PORT}")
+    
+    def assign_model(self, model:Model):
+        self.model=model
 
     # ==========================
     # Broadcasting
@@ -71,9 +76,6 @@ class UDPServer:
 
     def start_readloop(self):
         print("[UDP] started a read-loop")
-
-        if not self.model:
-            self.model = Model(self)
 
         self._running=True
         self._thread = threading.Thread(target=self._readloop, daemon=True)

@@ -11,6 +11,7 @@ from PyQt6.QtGui import QGuiApplication, QPainter, QBrush, QColor, QFont
 from PyQt6.QtCore import Qt, QTimer, QEvent, pyqtSignal
 from util import isDevMode
 from constants import *
+from model import Model
 
 class UDPConfigWindow(QWidget):
     def __init__(self, window_size):
@@ -95,6 +96,8 @@ class UDPConfigWindow(QWidget):
             return
         try:
             udp = UDPServer(receive_ip=receive_ip, broadcast_ip=broadcast_ip)
+            self.model = Model(udp)
+            udp.assign_model(self.model)
         except OSError:
             QMessageBox.warning(self, "Network Error", "Unable to bind to the specified IP address.")
             return
