@@ -73,7 +73,8 @@ class UDPServer:
         print(f"[UDP] recv: {data} from {addr}")
         if not self.model.handleInput(data):
             print(f"[UDP] Error: unsupported request from client: {data}")
-
+        self.send_socket.sendto(str(data).encode(), addr) # was missing response
+                                
     def start_readloop(self):
         print("[UDP] started a read-loop")
 
