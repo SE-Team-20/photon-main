@@ -47,7 +47,7 @@ class GameManager:
         self.players[playerID] = teamID
         return True
 
-class DB:
+class DataBase:
     def __init__(self):
         if isDevMode():
             print("warning: database connection is temporarily disabled")
@@ -223,6 +223,7 @@ class DB:
             print("DB error in get_codename:", e)
             return None
 
+    # omniscient integer return codename event handler
     def update_codename(self, playerID: int, codename: str) -> int:
         if self.uf is None:
             return ERROR_OCCURRED
@@ -344,7 +345,7 @@ _last_checked_registered = False   # state for is_registered()
 def _get_db():
     global _db_instance
     if _db_instance is None:
-        _db_instance = DB()
+        _db_instance = DataBase()
     return _db_instance
 
 def _delete_player(id):

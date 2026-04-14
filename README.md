@@ -2,19 +2,24 @@ sudo# Photon main (team 20)
 [quick link to the main branch](https://github.com/SE-Team-20/photon-main/tree/main)
 
 ## Quick Run Instructions (Linux)
+## Install script has two versions based on your native OS —Mac and Windows. Please use the version appropriate for your system:
+Both install scripts are for a Debian Linux environment. If you are using a Virtual Machine (Debian Linux) on a Mac, please use the _macinstall.sh_ script. If you are either using a Virtual Machine (Debian Linux) on Windows _or_ just using a native Debian Linux machine, please use the _wininstall.sh_.
+
+**TLDR: Use _wininstall.sh_ for Debian Linux or Windows(using Linux VM). Use _macinstall.sh_ for a Mac(using Linux VM).**
+ 
 1. Fix line endings
 ```
-sed -i 's/\r$//' install.sh run.sh
+sed -i 's/\r$//' ./<your install version>.sh run.sh
 ```
 
 2. Make scripts executable:
 ```
-chmod +x install.sh run.sh
+chmod +x <your install version>.sh run.sh
 ```
 
 3. Install software:
 ```
-./install.sh
+./<your install version>.sh
 ```
 
 4. Launch main program:
@@ -45,14 +50,14 @@ chmod +x install.sh run.sh
 </tr>
 </table>
 
-## TODOs (Sprint 3)
-by March 15th
-- [x] create clear entries button (Thomas)
-- [ ] create play action entry screen - template button created, widget screen needs to be configured.
-- [ ] ensure inputted hardware IDs are carried over to the play action screen.
-- [x] update trello card assignments for all team members.
-- [ ] code up game start countdown timer in play action screen (for simplicity).
-- [x] ensure install script executes as expected in a fresh Linux environment.
+## TODOs (Sprint 4)
+by April 19th
+- [ ] implement UDP server logic, run game using traffic_generator.py (Ali)
+- [ ] update score in scoreboard on socket recvfrom() (Thomas)
+- [ ] add base icon to player hitting base in scoreboard (Ryoji)
+- [ ] implement friendly fire logic (Ryoji)
+- [ ] add random music throughout game action (Wahid)
+- [ ] clean up UI and debug existing minor faults (Thomas and Ryoji)
 
 
 

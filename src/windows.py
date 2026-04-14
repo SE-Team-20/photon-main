@@ -11,6 +11,7 @@ from PyQt6.QtGui import QGuiApplication, QPainter, QBrush, QColor, QFont
 from PyQt6.QtCore import Qt, QTimer, QEvent, pyqtSignal
 from util import isDevMode
 from constants import *
+from model import Model
 
 class UDPConfigWindow(QWidget):
     def __init__(self, window_size):
@@ -18,16 +19,16 @@ class UDPConfigWindow(QWidget):
         self.setWindowTitle("Photon - Network Configuration")
         self.resize(window_size)
         self.setObjectName("ConfigWindow")
-        self.setStyleSheet("""
-            #ConfigWindow {
+        self.setStyleSheet(f"""
+            #ConfigWindow {{
                 background-color: black;
-            }
-            QLabel {
+            }}
+            QLabel {{
                 color: white;
                 font-family: Arial;
                 font-size: 14px;
-            }
-            QLineEdit {
+            }}
+            QLineEdit {{
                 background-color: {SEMI_TRANSPARENT_BLACK};
                 border: 1px solid {DARK_GREY};
                 padding: 8px;
@@ -35,18 +36,18 @@ class UDPConfigWindow(QWidget):
                 color: white;
                 font-size: 14px;
                 min-width: 220px;
-            }
-            QPushButton {
+            }}
+            QPushButton {{
                 background-color: {DEEP_RED};
                 padding: 10px 25px;
                 border-radius: 6px;
                 font-weight: bold;
                 font-size: 16px;
                 color: white;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: {LIGHT_RED};
-            }
+            }}
         """)
         layout = QVBoxLayout(self)
         layout.addStretch()
@@ -74,6 +75,12 @@ class UDPConfigWindow(QWidget):
         layout.addStretch()
         self.main_window = None
 
+        # shortcut
+        if isDevMode():
+            self.start_system()
+            self.close()
+            return
+
     def validate_ip(self, ip):
         try:
             socket.inet_aton(ip)
@@ -95,17 +102,20 @@ class UDPConfigWindow(QWidget):
             return
         try:
             udp = UDPServer(receive_ip=receive_ip, broadcast_ip=broadcast_ip)
+            self.model = Model(udp)
+            udp.assign_model(self.model)
         except OSError:
             QMessageBox.warning(self, "Network Error", "Unable to bind to the specified IP address.")
             return
-        self.main_window = MainWindow(udp, database)
+        self.main_window = MainWindow(udp, self.model)
         self.main_window.show()
         self.close()
 
 class MainWindow(QMainWindow):
-    def __init__(self, udp_server, db):
+    def __init__(self, udp_server: UDPServer, model: Model):
         self.udp = udp_server
-        self.db = db
+        self.model = model
+        self.db = database
         super().__init__()
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowTitle("PHOTON")
@@ -215,12 +225,12 @@ class MainWindow(QMainWindow):
         self.new_game_button.clicked.connect(self.clear_all_grids)
 
         # Start play action window
-        self.play_action_window = PlayActionWindow(self, self.udp)
+        self.play_action_window = PlayActionWindow(self, self.udp, self.model)
         self.start_game_button = QPushButton("Start Game", self.centralWidget())
         self.start_game_button.setFixedSize(120, 60)
         window_height = self.height()
         window_width = self.width()
-        self.start_game_button.move(window_width/2 - self.start_game_button.width()/2, 0)
+        self.start_game_button.move(int(window_width/2 - self.start_game_button.width()/2), 0)
         button_style = """
             background-color: rgba(40, 110, 230, 150);
             border-radius: 20px;
@@ -531,10 +541,11 @@ class MainWindow(QMainWindow):
         self.play_action_window.show()
 
 class PlayActionWindow(QMainWindow):
-    def __init__(self, main_window, udp_server):
+    def __init__(self, main_window, udp_server:UDPServer, model:Model):
         super().__init__()
         self.main_window = main_window
         self.udp = udp_server
+        self.model = model
 
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowTitle("PHOTON: Play Action")
@@ -584,7 +595,6 @@ class PlayActionWindow(QMainWindow):
             border-radius: 15px;
             padding: 5px 15px;
             margin: 5px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
         """
         self.red_label.setStyleSheet(red_label_style)
         shadow = QGraphicsDropShadowEffect()
@@ -616,7 +626,6 @@ class PlayActionWindow(QMainWindow):
             border-radius: 15px;
             padding: 5px 15px;
             margin: 5px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
         """
         self.green_label.setStyleSheet(green_label_style)
         self.green_label.setGraphicsEffect(shadow)  # reuse shadow
@@ -701,22 +710,18 @@ class PlayActionWindow(QMainWindow):
 
         # Timer for countdown
         self.timer = QTimer()
-        self.timer.timeout.connect(self.update_countdown)
+        self.timer.timeout.connect(self.update)
         self.remaining_seconds = 0
         self.timer_state = "ready"
 
-        # Connect UDP score signal
-        if hasattr(self.udp, 'score_received'):
-            self.udp.score_received.connect(self.on_score_received)
-
         # Example initial feed entries
-        self.add_hit("Scooby Doo hit Opus")
-        self.add_hit("Scooby Doo hit Opus")
-        self.add_hit("Scooby Doo hit Opus")
-        self.add_hit("Opus hit Scooby Doo")
-        self.add_hit("Opus hit the Base")
-        self.add_hit("Opus hit Scooby Doo")
-        self.add_hit("Opus hit Scooby Doo")
+        # self.add_hit("Scooby Doo hit Opus")
+        # self.add_hit("Scooby Doo hit Opus")
+        # self.add_hit("Scooby Doo hit Opus")
+        # self.add_hit("Opus hit Scooby Doo")
+        # self.add_hit("Opus hit the Base")
+        # self.add_hit("Opus hit Scooby Doo")
+        # self.add_hit("Opus hit Scooby Doo")
 
     def add_hit(self, text):
         item = QListWidgetItem(text)
@@ -727,9 +732,38 @@ class PlayActionWindow(QMainWindow):
     def start_countdown(self):
         self.timer_state = "ready"
         self.phase_label.setText("Players get ready!")
-        self.remaining_seconds = 30
+        self.remaining_seconds = 0 if isDevMode() else 30
         self.update_timer_display()
-        self.timer.start(1000)
+        self.timer.start(1000) # interval_ms (should be fixed)
+    
+    def start_game(self):
+        # send a signal to the clients and activate the udp server
+        self.udp.announce_game_start()
+        self.udp.start_readloop()
+    
+    def update(self):
+        self.update_countdown()
+        self.update_leaderboard()
+
+    def update_leaderboard(self):
+        print("updating leaderboard...")
+
+        # apply a baseicon
+        while(equip_id := self.model.pop_based_equip_id()) is not False:
+            self.grant_baseicon(equip_id)
+        
+        # play texts
+        while(message := self.model.pop_live_message()) is not False:
+            self.add_hit(message)
+        
+        # apply a score change
+        while(res := self.model.pop_score_diff()) is not False:
+            equip_id, diff = res
+            self.reflect_score_change(equip_id, diff)
+
+        # TODO: remove the line below once above seems working
+        self.add_hit("Ryoji is hit by Dr.Strother")
+        
 
     def update_countdown(self):
         self.remaining_seconds -= 1
@@ -737,15 +771,17 @@ class PlayActionWindow(QMainWindow):
 
         if self.remaining_seconds <= 0:
             if self.timer_state == "ready":
+                self.start_game()
                 self.timer_state = "game"
                 self.phase_label.setText("Game on!")
-                self.remaining_seconds = 2
+                self.remaining_seconds = 30 if isDevMode() else 360
                 self.update_timer_display()
             elif self.timer_state == "game":
                 self.timer.stop()
                 self.phase_label.setText("Game Over")
                 self.time_display.setText("0:00")
                 self.udp.broadcast_equipment_id(221)
+                self.close_play_action_window()
             else:
                 self.timer.stop()
 
@@ -758,6 +794,9 @@ class PlayActionWindow(QMainWindow):
         self.refresh_players()
         self.start_countdown()
         super().showEvent(event)
+
+    def close_play_action_window(self):
+        self.hide()
 
     def refresh_players(self):
         self._clear_grid(self.red_grid)
@@ -793,38 +832,74 @@ class PlayActionWindow(QMainWindow):
             if widget:
                 widget.deleteLater()
 
+    # note: I changed all the index by +1 to insert a baseicon (maybe leading to an index overflow based on how PyQt works)
+    # TODO: 
     def _add_player_row(self, grid, row, player_id, codename, equip_id, team):
+        icon = QLabel()
+        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon.setScaledContents(False)
+
+        layout = QVBoxLayout(icon)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.addWidget(icon)
+        grid.addWidget(icon, row, 0)
+
         id_label = QLabel(str(player_id))
         id_label.setStyleSheet("color: white; font-size: 12px;")
         id_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(id_label, row, 0)
+        grid.addWidget(id_label, row, 1)
 
         name_label = QLabel(codename)
         name_label.setStyleSheet("color: white; font-size: 12px;")
         name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(name_label, row, 1)
+        grid.addWidget(name_label, row, 2)
 
         equip_label = QLabel(str(equip_id))
         equip_label.setStyleSheet("color: #cccccc; font-size: 12px; font-weight: bold;")
         equip_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(equip_label, row, 2)
+        grid.addWidget(equip_label, row, 3)
 
         score_label = QLabel("0")
         score_label.setStyleSheet("color: #ffffaa; font-size: 14px; font-weight: bold;")
         score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(score_label, row, 3)
+        grid.addWidget(score_label, row, 4)
 
         equip_id_int = int(equip_id)
         self.score_labels[equip_id_int] = (team, score_label)
         self.player_scores[equip_id_int] = 0
+        self.icon_labels[equip_id_int] = icon
+    
+    # TODO: check if it works
+    def grant_baseicon(self, equip_id):
+        if equip_id not in self.icon_labels:
+            print(f"Warning: baseicon request received for unknown equipment ID {equip_id}")
+            return
+        label = self.icon_labels[equip_id]
+        pixmap = QPixmap('../assets/images/baseicon.jpg')
 
-    def on_score_received(self, equip_id, points):
-        if equip_id in self.score_labels:
-            team, label = self.score_labels[equip_id]
-            self.player_scores[equip_id] += points
-            label.setText(str(self.player_scores[equip_id]))
-        else:
+        if pixmap.isNull():
+            label.clear()
+            return
+        target_size = 32
+        scaled = pixmap.scaled(
+            target_size,
+            target_size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
+
+        label.setPixmap(scaled)
+        
+        print("baseicon is now refected to " + equip_id)
+
+    def reflect_score_change(self, equip_id, diff):
+        if equip_id not in self.score_labels:
             print(f"Warning: Score received for unknown equipment ID {equip_id}")
+            return
+        
+        _, label = self.score_labels[equip_id]
+        self.player_scores[equip_id] += diff
+        label.setText(str(self.player_scores[equip_id]))
 
     def reset_scores(self):
         for equip_id in self.player_scores:

@@ -2,20 +2,21 @@ import socket
 import random
 import time
 
+from util import isDevMode
+
 bufferSize = 1024
 friendly_fire = 0
 serverAddressPort = ("0.0.0.0", 7500)
 clientAddressPort = ("127.0.0.1", 7501)
 
 
-print("this program will generate some test traffic for 2 players on the red ")
-print("team as well as 2 players on the green team")
-print("")
+print("[TG] this program will generate some test traffic for 2 players on the red ")
+print("[TG] team as well as 2 players on the green team\n")
 
-red1 = input("Enter equipment id of red player 1 ==> ")
-red2 = input("Enter equipment id of red player 2 ==> ")
-green1 = input("Enter equipment id of green player 1 ==> ")
-green2 = input("Enter equipment id of green player 2 ==> ")
+red1 = "1" if isDevMode() else input("[TG] Enter equipment id of red player 1 ==> ")
+red2 = "3" if isDevMode() else input("[TG] Enter equipment id of red player 2 ==> ")
+green1 = "2" if isDevMode() else input("[TG] Enter equipment id of green player 1 ==> ")
+green2 = "4" if isDevMode() else input("[TG] Enter equipment id of green player 2 ==> ")
 
 # Create datagram sockets
 UDPServerSocketReceive = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -26,13 +27,13 @@ UDPServerSocketReceive.bind(serverAddressPort)
 
 # wait for start from game software
 print("")
-print("waiting for start from game_software")
+print("[TG] waiting for start the start signal from main.py")
 
 received_data = " "
 while received_data != "202":
     received_data, address = UDPServerSocketReceive.recvfrom(bufferSize)
     received_data = received_data.decode("utf-8")
-    print("Received from game software: " + received_data)
+    print("[TG] Received from main.py: " + received_data)
 print("")
 
 # create events, random player and order
@@ -65,7 +66,7 @@ while True:
     if counter == 20:
         message = str(greenplayer) + ":53"
 
-    print("transmitting to game: " + message)
+    print("[TG] transmitting to game: " + message)
 
     UDPClientSocketTransmit.sendto(str.encode(str(message)), clientAddressPort)
     # receive answer from game softare
@@ -73,7 +74,7 @@ while True:
     received_data, address = UDPServerSocketReceive.recvfrom(bufferSize)
     received_data = received_data.decode("utf-8")
 
-    print("Received from game software: " + received_data)
+    print("[TG] Received from main.py: " + received_data)
     print("")
 
     # if we have friendly fire, do a second receive
@@ -81,7 +82,7 @@ while True:
         received_data, address = UDPServerSocketReceive.recvfrom(bufferSize)
         received_data = received_data.decode("utf-8")
         friendly_fire = 0
-        print("Received from game software: " + received_data)
+        print("[TG] Received from game software: " + received_data)
         print("")
 
     counter = counter + 1
@@ -89,4 +90,4 @@ while True:
         break
     time.sleep(random.randint(1, 3))
 
-print("program complete")
+print("[TG] program complete")
