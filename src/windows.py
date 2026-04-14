@@ -707,6 +707,7 @@ class PlayActionWindow(QMainWindow):
         # Data structures for score updates
         self.score_labels = {}
         self.player_scores = {}
+        self.icon_labels = {}
 
         # Timer for countdown
         self.timer = QTimer()
@@ -746,6 +747,9 @@ class PlayActionWindow(QMainWindow):
         self.update_leaderboard()
 
     def update_leaderboard(self):
+        print("[Window] update_leaderboard called")
+        print(f"[Window] messageq size: {len(self.model.messageq)}")
+        print(f"[Window] scorediffq size: {len(self.model.scorediffq)}")
         print("updating leaderboard...")
 
         # apply a baseicon
@@ -761,8 +765,6 @@ class PlayActionWindow(QMainWindow):
             equip_id, diff = res
             self.reflect_score_change(equip_id, diff)
 
-        # TODO: remove the line below once above seems working
-        self.add_hit("Ryoji is hit by Dr.Strother")
         
 
     def update_countdown(self):
@@ -820,10 +822,13 @@ class PlayActionWindow(QMainWindow):
         red_data = self.main_window.get_red_team_data()
         for row, (player_id, codename, equip_id) in enumerate(red_data, start=1):
             self._add_player_row(self.red_grid, row, player_id, codename, equip_id, "red")
-
+            self.model.equip_to_codename[int(equip_id)] = codename # evil python hacking
+            print(f"[Window] equip_to_codename populated: {self.model.equip_to_codename}")
         green_data = self.main_window.get_green_team_data()
         for row, (player_id, codename, equip_id) in enumerate(green_data, start=1):
             self._add_player_row(self.green_grid, row, player_id, codename, equip_id, "green")
+            self.model.equip_to_codename[int(equip_id)] = codename
+            print(f"[Window] equip_to_codename populated: {self.model.equip_to_codename}")
 
     def _clear_grid(self, grid):
         while grid.count():
@@ -838,6 +843,7 @@ class PlayActionWindow(QMainWindow):
         icon = QLabel()
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon.setScaledContents(False)
+        grid.addWidget(icon, row, 0)
 
         layout = QVBoxLayout(icon)
         layout.setContentsMargins(4, 4, 4, 4)
