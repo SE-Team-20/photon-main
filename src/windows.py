@@ -1,6 +1,7 @@
 import socket
 import constants
 import database
+from sound_manager import SoundManager
 from PyQt6.QtWidgets import (
     QMainWindow, QVBoxLayout, QLineEdit, QLabel, QWidget, QPushButton,
     QFormLayout, QMessageBox, QHBoxLayout, QGridLayout, QGraphicsDropShadowEffect,
@@ -547,6 +548,8 @@ class PlayActionWindow(QMainWindow):
         self.udp = udp_server
         self.model = model
 
+        self.sound = SoundManager()
+        self.start_track_played = False
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowTitle("PHOTON: Play Action")
 
@@ -734,6 +737,7 @@ class PlayActionWindow(QMainWindow):
         self.timer_state = "ready"
         self.phase_label.setText("Players get ready!")
         self.remaining_seconds = 0 if isDevMode() else 30
+        self.start_track_played = False
         self.update_timer_display()
         self.timer.start(1000) # interval_ms (should be fixed)
     
@@ -771,6 +775,10 @@ class PlayActionWindow(QMainWindow):
         self.remaining_seconds -= 1
         self.update_timer_display()
 
+        if self.timer_state == "ready" and self.remaining_seconds == 16 and not self.start_track_played:
+            self.sound.play_random_start_track()
+            self.start_track_played = True
+
         if self.remaining_seconds <= 0:
             if self.timer_state == "ready":
                 self.start_game()
@@ -783,6 +791,7 @@ class PlayActionWindow(QMainWindow):
                 self.phase_label.setText("Game Over")
                 self.time_display.setText("0:00")
                 self.udp.broadcast_equipment_id(221)
+                self.sound.stop()
                 self.close_play_action_window()
             else:
                 self.timer.stop()
