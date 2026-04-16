@@ -806,7 +806,7 @@ class PlayActionWindow(QMainWindow):
         self.score_labels.clear()
         self.player_scores.clear()
 
-        headers = ["ID", "Codename", "Equip", "Score"]
+        headers = ["","ID", "Codename", "Equip", "Score"]
         header_style = "color: white; font-weight: bold; font-size: 12px;"
         for col, text in enumerate(headers):
             header_red = QLabel(text)
@@ -842,12 +842,6 @@ class PlayActionWindow(QMainWindow):
     def _add_player_row(self, grid, row, player_id, codename, equip_id, team):
         icon = QLabel()
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setScaledContents(False)
-        grid.addWidget(icon, row, 0)
-
-        layout = QVBoxLayout(icon)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.addWidget(icon)
         grid.addWidget(icon, row, 0)
 
         id_label = QLabel(str(player_id))
