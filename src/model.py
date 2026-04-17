@@ -1,6 +1,7 @@
 from interface import Server
 from collections import deque
 import database
+from constants import CODE_BASESCORE_RED, CODE_BASESCORE_GREEN, SCORE_TAKEDOWN, PENALTY_TAKEDOWN, SCORE_BASE
 
 # 
 # core purpose: handling data between a server and clients
@@ -16,6 +17,7 @@ class Model:
     self.messageq = deque()
     self.scorediffq = deque()
     self.equip_to_codename = {} # codename dictionary via equip id
+    self.equip_to_team = {}     # team id lookup via equip id
 
   # def basedPlayerCount(self):
   #   return len(self.basedq)
@@ -67,10 +69,30 @@ class Model:
   def _grant_score(self, equip_id: int, diff: int):
     self.scorediffq.append((equip_id, diff))
 
+  def _get_team(self, equip_id: int):
+    return self.equip_to_team.get(equip_id)
+
   # should call methods at self.udp based on the situation
   def _handleDigitPair(self, hitter: int, receiver: int):
     print(f"[Model] _handleDigitPair: hitter={hitter}, receiver={receiver}")
     print(f"[Model] equip_to_codename: {self.equip_to_codename}")
+
+    if receiver == int(CODE_BASESCORE_RED):
+      hitter_name = self.equip_to_codename.get(hitter)
+      if self._get_team(hitter) == Model.GREEN and hitter_name is not None:
+        self._insertBasedEquipID(hitter)
+        self._grant_score(hitter, SCORE_BASE)
+        self._insertLiveMessage(f"{hitter_name} hit Red Team's Base")
+      return
+
+    if receiver == int(CODE_BASESCORE_GREEN):
+      hitter_name = self.equip_to_codename.get(hitter)
+      if self._get_team(hitter) == Model.RED and hitter_name is not None:
+        self._insertBasedEquipID(hitter)
+        self._grant_score(hitter, SCORE_BASE)
+        self._insertLiveMessage(f"{hitter_name} hit Green Team's Base")
+      return
+
     hitter_name = self.equip_to_codename.get(hitter)
     receiver_name = self.equip_to_codename.get(receiver)
 
@@ -78,26 +100,13 @@ class Model:
       print(f"Unknown equipment ID(s): hitter={hitter}, receiver={receiver}")
       return
 
-    self._grant_score(hitter, 10)
-    self._insertLiveMessage(f"{hitter_name} hit {receiver_name}")
+    self.udp.broadcast_equipment_id(receiver)
 
-    
-  #   # base event
-  #   if(b in ["43", "53"]):
-  #     if(b=="43" and RED==self._getTeamID(equipA) or a=="53" and GREEN==self._getTeamID(equipA)):
-  #       self._insertBasedEquipID(equipA)
-  #       self._grant_score(equipA, 100)
-  #     return
-    
-  #   # pvp event
-  #   equipB=b
-
-  #   if self._getTeamID(equipA) != self._getTeamID(equipB):
-  #     # TODO: stun playerB on hit
-  #     # TODO: grant score to playerA
-  #     print("normal combat not implemented")
-  #   else:
-  #     # TODO: do NOT stun playerB (or as an instruction specifies)
-  #     # TODO: grant penalty to playerA
-  #     #TODO: call udp server to do something
-  #     print("handling friendly fire not implemented")
+    if self._get_team(hitter) is not None and self._get_team(hitter) == self._get_team(receiver):
+      self._grant_score(hitter, PENALTY_TAKEDOWN)
+      self._grant_score(receiver, PENALTY_TAKEDOWN)
+      self._insertLiveMessage(f"{hitter_name} hit teammate {receiver_name} (-10 each)")
+      self.udp.broadcast_equipment_id(hitter)
+    else:
+      self._grant_score(hitter, SCORE_TAKEDOWN)
+      self._insertLiveMessage(f"{hitter_name} hit {receiver_name}")

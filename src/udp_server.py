@@ -56,8 +56,9 @@ class UDPServer:
         print(f"[UDP] Broadcasted a signal 202, meaning that the game is began")
     
     def announce_game_end(self):
-        self.broadcast("221")
-        print(f"[UDP] Broadcasted a signal 221, meaning that the game is end")
+        for _ in range(3):
+            self.broadcast("221")
+        print(f"[UDP] Broadcasted signal 221 three times, game has ended")
 
     # broadcast equipment codes after each player addition
     def broadcast_equipment_id(self, equipment_id):
@@ -73,7 +74,6 @@ class UDPServer:
         print(f"[UDP] recv: {data} from {addr}")
         if not self.model.handleInput(data):
             print(f"[UDP] Error: unsupported request from client: {data}")
-        self.send_socket.sendto(str(data).encode(), addr) # was missing response
                                 
     def start_readloop(self):
         print("[UDP] started a read-loop")

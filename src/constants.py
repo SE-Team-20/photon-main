@@ -100,6 +100,8 @@ GREEN = "rgba(0, 100, 0, 150)"
 DARK_GREY = "#555555"
 DEEP_RED = "#b30000"
 LIGHT_RED = "#e60000"
+COLOR_SCORE_FLASH = "#ffffaa"
+COLOR_EQUIP_LABEL = "#cccccc"
 BLUR_RADIUS = 15
 DROPSHADOW_OFFSET_AMOUNT = (0, 5)
 SHADOW_COLOR = (0, 0, 0, 160)
@@ -176,6 +178,134 @@ def window_stays_on_top(self, enable):
 # =========================================================
 # Misc
 # =========================================================
+
+# =========================================================
+# UI Styles
+# =========================================================
+STYLE_CONFIG_WINDOW = f"""
+    #ConfigWindow {{
+        background-color: black;
+    }}
+    QLabel {{
+        color: white;
+        font-family: Arial;
+        font-size: 14px;
+    }}
+    QLineEdit {{
+        background-color: {SEMI_TRANSPARENT_BLACK};
+        border: 1px solid {DARK_GREY};
+        padding: 8px;
+        border-radius: 6px;
+        color: white;
+        font-size: 14px;
+        min-width: 220px;
+    }}
+    QPushButton {{
+        background-color: {DEEP_RED};
+        padding: 10px 25px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 16px;
+        color: white;
+    }}
+    QPushButton:hover {{
+        background-color: {LIGHT_RED};
+    }}
+"""
+STYLE_ACTION_BUTTON = """
+    background-color: rgba(40, 110, 230, 150);
+    border-radius: 20px;
+    padding: 5px;
+    font-weight: bold;
+    font-size: 13px;
+    font-family: 'Orbitron', 'Courier New', sans-serif;
+    color: white;
+"""
+STYLE_TEAM_LABEL_ENTRY_RED = """
+    color: white;
+    font-weight: bold;
+    font-size: 36px;
+    font-family: 'Orbitron', 'Courier New', sans-serif;
+    background-color: rgba(100, 0, 0, 150);
+    border-radius: 20px;
+    padding: 10px 20px;
+    margin: 10px;
+"""
+STYLE_TEAM_LABEL_ENTRY_GREEN = """
+    color: white;
+    font-weight: bold;
+    font-size: 36px;
+    font-family: 'Orbitron', 'Courier New', sans-serif;
+    background-color: rgba(0, 100, 0, 150);
+    border-radius: 20px;
+    padding: 10px 20px;
+    margin: 10px;
+"""
+STYLE_TEAM_LABEL_PLAY_RED = """
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+    font-family: 'Audiowide', 'Orbitron', 'Courier New', sans-serif;
+    background-color: rgba(100, 0, 0, 150);
+    border-radius: 15px;
+    padding: 5px 15px;
+    margin: 5px;
+"""
+STYLE_TEAM_LABEL_PLAY_GREEN = """
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+    font-family: 'Audiowide', 'Orbitron', 'Courier New', sans-serif;
+    background-color: rgba(0, 100, 0, 150);
+    border-radius: 15px;
+    padding: 5px 15px;
+    margin: 5px;
+"""
+STYLE_SEMI_TRANSPARENT_CONTAINER = "background-color: rgba(0, 0, 0, 127); border-radius: 15px;"
+STYLE_TEAM_SCORE_LABEL = "color: white; font-weight: bold; font-size: 18px; font-family: 'Orbitron', 'Courier New';"
+STYLE_TEAM_SCORE_LABEL_FLASH = f"color: {COLOR_SCORE_FLASH}; font-weight: bold; font-size: 18px; font-family: 'Orbitron', 'Courier New';"
+STYLE_SECTION_LABEL = "color: white; font-weight: bold; font-size: 18px; font-family: 'Orbitron';"
+STYLE_TIMER_DISPLAY = f"color: {COLOR_SCORE_FLASH}; font-size: 36px; font-weight: bold; font-family: 'Orbitron';"
+STYLE_GRID_HEADER = "color: white; font-weight: bold; font-size: 12px;"
+STYLE_PLAYER_LABEL = "color: white; font-size: 12px;"
+STYLE_EQUIP_LABEL = f"color: {COLOR_EQUIP_LABEL}; font-size: 12px; font-weight: bold;"
+STYLE_SCORE_LABEL = f"color: {COLOR_SCORE_FLASH}; font-size: 14px; font-weight: bold;"
+STYLE_PLAYER_INDEX_LABEL = "color: black; font-weight: bold;"
+STYLE_HIT_FEED_LIST = """
+    QListWidget {
+        background-color: transparent;
+        color: white;
+        font-size: 14px;
+        font-family: 'Courier New';
+        border: none;
+    }
+    QListWidget::item {
+        padding: 2px;
+    }
+"""
+
+# =========================================================
+# Layout Sizes
+# =========================================================
+PANEL_WIDTH_RATIO = 0.48
+PANEL_HEIGHT_RATIO = 0.6
+ACTION_BUTTON_WIDTH = 120
+ACTION_BUTTON_HEIGHT = 60
+PLAYER_ID_FIELD_WIDTH = 35
+FIELD_HEIGHT = 28
+CODENAME_FIELD_WIDTH = 140
+PLAYER_INDEX_LABEL_WIDTH = 70
+BASEICON_SIZE = 32
+
+# =========================================================
+# Timing
+# =========================================================
+FLASH_INTERVAL_MS = 500
+TIMER_INTERVAL_MS = 1000
+MUSIC_START_THRESHOLD = 16
+COUNTDOWN_READY_SECONDS = 30
+GAME_DURATION_SECONDS = 360
+DEV_GAME_DURATION_SECONDS = 30
 
 APP_NAME = "Photon Main"
 # VERSION = "1.0.1"
