@@ -38,5 +38,6 @@ def main():
     QTimer.singleShot(0 if isDevMode() else 3000, show_config)
     sys.exit(app.exec())
 
+
 if __name__ == "__main__":
     main()

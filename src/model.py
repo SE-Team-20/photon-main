@@ -101,4 +101,3 @@ class Model:
   #     # TODO: grant penalty to playerA
   #     #TODO: call udp server to do something
   #     print("handling friendly fire not implemented")
-
