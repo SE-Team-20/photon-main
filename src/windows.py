@@ -611,6 +611,13 @@ class PlayActionWindow(QMainWindow):
         self.time_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
         timer_layout.addWidget(self.time_display)
 
+        self.end_hint_label = QLabel("Press any key to close scoreboard")
+        self.end_hint_label.setStyleSheet(STYLE_SECTION_LABEL)
+        self.end_hint_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.end_hint_label.setWordWrap(True)
+        self.end_hint_label.setVisible(False)
+        timer_layout.addWidget(self.end_hint_label)
+
         bottom_layout.addWidget(hit_feed_container, 2)
         bottom_layout.addWidget(timer_container, 1)
 
@@ -653,6 +660,7 @@ class PlayActionWindow(QMainWindow):
     def start_countdown(self):
         self.timer_state = "ready"
         self.phase_label.setText("Players get ready!")
+        self.end_hint_label.setVisible(False)
         self.remaining_seconds = 0 if isDevMode() else COUNTDOWN_READY_SECONDS
         self.start_track_played = False
         self.update_timer_display()
@@ -708,11 +716,12 @@ class PlayActionWindow(QMainWindow):
                 self.timer.stop()
                 self.flash_timer.stop()
                 self._reset_flash()
+                self.timer_state = "game_over"
                 self.phase_label.setText("Game Over")
                 self.time_display.setText("0:00")
+                self.end_hint_label.setVisible(True)
                 self.udp.announce_game_end()
                 self.sound.stop()
-                self.close_play_action_window()
             else:
                 self.timer.stop()
 
@@ -725,6 +734,16 @@ class PlayActionWindow(QMainWindow):
         self.refresh_players()
         self.start_countdown()
         super().showEvent(event)
+
+    def keyPressEvent(self, event):
+        if self.timer_state == "game_over":
+            self.close_play_action_window()
+            self.main_window.show()
+            self.main_window.raise_()
+
+    def hideEvent(self, event):
+        self.sound.stop()
+        super().hideEvent(event)
 
     def close_play_action_window(self):
         self.flash_timer.stop()
