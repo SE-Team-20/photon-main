@@ -9,10 +9,8 @@ from PyQt6.QtGui import QPixmap
 # Base Paths
 # =========================================================
 
-# Project root
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Assets
 ASSETS_DIR = BASE_DIR / "assets"
 IMAGES_DIR = ASSETS_DIR / "images"
 SFX_DIR = ASSETS_DIR / "sound"
@@ -32,12 +30,6 @@ def logo_icon():
         )
     return logo_icon._cached
 BLURRED_LOGO = Path(IMAGES_DIR / "blurredlogo.jpg").as_posix()
-# BACKGROUND = IMAGES_DIR / "background.jpg"
-# DEFAULT_AVATAR = IMAGES_DIR / "default_avatar.png"
-
-# Example UI images
-# BUTTON_START = IMAGES_DIR / "btn_start.png"
-# BUTTON_STOP = IMAGES_DIR / "btn_stop.png"
 
 DBINIT_PATH = CONFIG_DIR / "database.ini"
 DBINIT_SEC = "postgresql"
@@ -88,49 +80,38 @@ BASE_EQUIP_ID = 100
 # Colors (Hex / RGB)
 # =========================================================
 
-# Global theme
-# COLOR_PRIMARY = "#2E3440"
-# COLOR_SECONDARY = "#3B4252"
-# COLOR_ACCENT = "#88C0D0"
-
-# Backgrounds
 SEMI_TRANSPARENT_BLACK = "rgba(0, 0, 0, 180)"
 RED = "rgba(100, 0, 0, 150)"
 GREEN = "rgba(0, 100, 0, 150)"
 DARK_GREY = "#555555"
 DEEP_RED = "#b30000"
 LIGHT_RED = "#e60000"
-COLOR_SCORE_FLASH = "#ffffaa"
-COLOR_EQUIP_LABEL = "#cccccc"
+COLOR_SCORE_FLASH = "#ffee00"
+COLOR_EQUIP_LABEL = "#00c8ff"
 BLUR_RADIUS = 15
 DROPSHADOW_OFFSET_AMOUNT = (0, 5)
 SHADOW_COLOR = (0, 0, 0, 160)
 CONTENT_MARGINS = (0, 0, 0, 0)
+
+# Neon palette
+NEON_CYAN = "#00ffff"
+NEON_RED_BRIGHT = "#ff3333"
+NEON_GREEN_BRIGHT = "#00ff55"
+NEON_BLUE = "#0088ff"
+NEON_YELLOW = "#ffee00"
+
 BLURRED_LOGO_BACKGROUND = f"""
                 border-image: url('{BLURRED_LOGO}');
                 background-position: center;
         """
-# COLOR_BG_MAIN = "#ECEFF4"
-# COLOR_BG_DARK = "#2E3440"
-# COLOR_BG_WIDGET = "#FFFFFF"
-
-# Text
-# COLOR_TEXT_MAIN = "#2E3440"
-# COLOR_TEXT_LIGHT = "#D8DEE9"
-# COLOR_TEXT_DISABLED = "#A0A0A0"
-
-# Status
-# COLOR_SUCCESS = "#A3BE8C"
-# COLOR_WARNING = "#EBCB8B"
-# COLOR_ERROR = "#BF616A"
 
 # =========================================================
 # Window / Layout
 # =========================================================
 VERTICAL_SPACING = 12
-COOL_FONT = "font-family: 'Courier New'; font-size: 16px; font-weight: bold; background-color: teal;"
-RED_TEAM_BACKGROUND = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: rgba(160, 0, 96, 64);"
-GREEN_TEAM_BACKGROUND = "font-family: 'Courier New'; font-size: 14px; font-weight: bold; color: black; background-color: rgba(0, 128, 128, 64);"
+COOL_FONT = f"font-family: 'Orbitron', 'Courier New'; font-size: 13px; font-weight: bold; background-color: #000a14; color: {NEON_CYAN};"
+RED_TEAM_BACKGROUND = f"font-family: 'Courier New', monospace; font-size: 12px; font-weight: bold; color: #ffcccc; background-color: rgba(70, 0, 0, 140); border: 1px solid {NEON_RED_BRIGHT}; border-radius: 2px;"
+GREEN_TEAM_BACKGROUND = f"font-family: 'Courier New', monospace; font-size: 12px; font-weight: bold; color: #ccffdd; background-color: rgba(0, 55, 0, 140); border: 1px solid {NEON_GREEN_BRIGHT}; border-radius: 2px;"
 HORIZONTAL_SPACING = 20
 NETWORK_SECTION_HEIGHT = 30
 NETWORK_SECTION_SPACING = 20
@@ -147,142 +128,194 @@ def window_stays_on_top(self, enable):
     else:
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowStaysOnTopHint)
     self.show()
-# WINDOW_WIDTH = 1200
-# WINDOW_HEIGHT = 800
-
-# MIN_WIDTH = 800
-# MIN_HEIGHT = 600
-
-# PADDING_SMALL = 8
-# PADDING_MEDIUM = 16
-# PADDING_LARGE = 24
-
-# =========================================================
-# Fonts
-# =========================================================
-
-# FONT_FAMILY = "Segoe UI"
-# FONT_SIZE_SMALL = 10
-# FONT_SIZE_NORMAL = 12
-# FONT_SIZE_LARGE = 16
-# FONT_SIZE_TITLE = 24
-
-# =========================================================
-# Timing / Animation
-# =========================================================
-
-# ANIMATION_FAST = 100      # ms
-# ANIMATION_NORMAL = 250
-# ANIMATION_SLOW = 500
-
-# =========================================================
-# Misc
-# =========================================================
 
 # =========================================================
 # UI Styles
 # =========================================================
 STYLE_CONFIG_WINDOW = f"""
     #ConfigWindow {{
-        background-color: black;
+        background-color: #000a14;
     }}
     QLabel {{
-        color: white;
-        font-family: Arial;
+        color: {NEON_CYAN};
+        font-family: 'Orbitron', 'Courier New', monospace;
         font-size: 14px;
+        letter-spacing: 1px;
     }}
     QLineEdit {{
-        background-color: {SEMI_TRANSPARENT_BLACK};
-        border: 1px solid {DARK_GREY};
+        background-color: rgba(0, 15, 35, 220);
+        border: 1px solid {NEON_CYAN};
+        border-radius: 3px;
         padding: 8px;
-        border-radius: 6px;
-        color: white;
-        font-size: 14px;
+        color: {NEON_CYAN};
+        font-family: 'Orbitron', 'Courier New', monospace;
+        font-size: 13px;
         min-width: 220px;
     }}
+    QLineEdit:focus {{
+        border: 2px solid {NEON_BLUE};
+    }}
     QPushButton {{
-        background-color: {DEEP_RED};
+        background-color: rgba(180, 0, 0, 200);
+        border: 2px solid {NEON_RED_BRIGHT};
         padding: 10px 25px;
-        border-radius: 6px;
+        border-radius: 3px;
         font-weight: bold;
-        font-size: 16px;
+        font-size: 15px;
+        font-family: 'Orbitron', 'Courier New', monospace;
         color: white;
+        letter-spacing: 2px;
     }}
     QPushButton:hover {{
-        background-color: {LIGHT_RED};
+        background-color: rgba(220, 0, 0, 230);
+        border: 2px solid white;
+        color: {NEON_YELLOW};
     }}
 """
-STYLE_ACTION_BUTTON = """
-    background-color: rgba(40, 110, 230, 150);
-    border-radius: 20px;
+STYLE_CONFIG_TITLE = f"font-size: 24px; font-weight: bold; color: {NEON_CYAN}; font-family: 'Orbitron', 'Courier New'; letter-spacing: 3px;"
+STYLE_ACTION_BUTTON = f"""
+    background-color: rgba(0, 30, 80, 200);
+    border: 2px solid {NEON_BLUE};
+    border-radius: 4px;
     padding: 5px;
     font-weight: bold;
     font-size: 13px;
     font-family: 'Orbitron', 'Courier New', sans-serif;
-    color: white;
+    color: {NEON_CYAN};
+    letter-spacing: 1px;
 """
-STYLE_TEAM_LABEL_ENTRY_RED = """
+STYLE_TEAM_LABEL_ENTRY_RED = f"""
     color: white;
     font-weight: bold;
-    font-size: 36px;
+    font-size: 32px;
     font-family: 'Orbitron', 'Courier New', sans-serif;
-    background-color: rgba(100, 0, 0, 150);
-    border-radius: 20px;
-    padding: 10px 20px;
-    margin: 10px;
+    background-color: rgba(150, 0, 0, 200);
+    border: 3px solid {NEON_RED_BRIGHT};
+    border-radius: 3px;
+    padding: 8px 20px;
+    margin: 8px;
+    letter-spacing: 5px;
 """
-STYLE_TEAM_LABEL_ENTRY_GREEN = """
+STYLE_TEAM_LABEL_ENTRY_GREEN = f"""
     color: white;
     font-weight: bold;
-    font-size: 36px;
+    font-size: 32px;
     font-family: 'Orbitron', 'Courier New', sans-serif;
-    background-color: rgba(0, 100, 0, 150);
-    border-radius: 20px;
-    padding: 10px 20px;
-    margin: 10px;
+    background-color: rgba(0, 110, 0, 200);
+    border: 3px solid {NEON_GREEN_BRIGHT};
+    border-radius: 3px;
+    padding: 8px 20px;
+    margin: 8px;
+    letter-spacing: 5px;
 """
-STYLE_TEAM_LABEL_PLAY_RED = """
+STYLE_TEAM_LABEL_PLAY_RED = f"""
     color: white;
     font-weight: bold;
-    font-size: 24px;
-    font-family: 'Audiowide', 'Orbitron', 'Courier New', sans-serif;
-    background-color: rgba(100, 0, 0, 150);
-    border-radius: 15px;
-    padding: 5px 15px;
-    margin: 5px;
+    font-size: 20px;
+    font-family: 'Orbitron', 'Courier New', sans-serif;
+    background-color: rgba(150, 0, 0, 200);
+    border-bottom: 2px solid {NEON_RED_BRIGHT};
+    padding: 6px 15px;
+    letter-spacing: 4px;
 """
-STYLE_TEAM_LABEL_PLAY_GREEN = """
+STYLE_TEAM_LABEL_PLAY_GREEN = f"""
     color: white;
     font-weight: bold;
-    font-size: 24px;
-    font-family: 'Audiowide', 'Orbitron', 'Courier New', sans-serif;
-    background-color: rgba(0, 100, 0, 150);
-    border-radius: 15px;
-    padding: 5px 15px;
-    margin: 5px;
+    font-size: 20px;
+    font-family: 'Orbitron', 'Courier New', sans-serif;
+    background-color: rgba(0, 110, 0, 200);
+    border-bottom: 2px solid {NEON_GREEN_BRIGHT};
+    padding: 6px 15px;
+    letter-spacing: 4px;
 """
-STYLE_SEMI_TRANSPARENT_CONTAINER = "background-color: rgba(0, 0, 0, 127); border-radius: 15px;"
-STYLE_TEAM_SCORE_LABEL = "color: white; font-weight: bold; font-size: 18px; font-family: 'Orbitron', 'Courier New';"
-STYLE_TEAM_SCORE_LABEL_FLASH = f"color: {COLOR_SCORE_FLASH}; font-weight: bold; font-size: 18px; font-family: 'Orbitron', 'Courier New';"
-STYLE_SECTION_LABEL = "color: white; font-weight: bold; font-size: 18px; font-family: 'Orbitron';"
-STYLE_TIMER_DISPLAY = f"color: {COLOR_SCORE_FLASH}; font-size: 36px; font-weight: bold; font-family: 'Orbitron';"
-STYLE_GRID_HEADER = "color: white; font-weight: bold; font-size: 12px;"
-STYLE_PLAYER_LABEL = "color: white; font-size: 12px;"
-STYLE_EQUIP_LABEL = f"color: {COLOR_EQUIP_LABEL}; font-size: 12px; font-weight: bold;"
-STYLE_SCORE_LABEL = f"color: {COLOR_SCORE_FLASH}; font-size: 14px; font-weight: bold;"
-STYLE_PLAYER_INDEX_LABEL = "color: black; font-weight: bold;"
-STYLE_HIT_FEED_LIST = """
-    QListWidget {
-        background-color: transparent;
-        color: white;
-        font-size: 14px;
-        font-family: 'Courier New';
+STYLE_SEMI_TRANSPARENT_CONTAINER = f"background-color: rgba(0, 6, 20, 210); border: 2px solid {NEON_CYAN}; border-radius: 3px;"
+STYLE_TEAM_SCORE_LABEL = f"color: {NEON_CYAN}; font-weight: bold; font-size: 16px; font-family: 'Orbitron', 'Courier New'; letter-spacing: 1px; padding: 5px;"
+STYLE_TEAM_SCORE_LABEL_FLASH = f"color: {NEON_YELLOW}; font-weight: bold; font-size: 18px; font-family: 'Orbitron', 'Courier New'; letter-spacing: 1px; padding: 5px;"
+# Team-specific total bar styles used in PlayActionWindow score labels
+STYLE_TEAM_SCORE_LABEL_RED = f"""
+    color: white;
+    font-weight: bold;
+    font-size: 15px;
+    font-family: 'Orbitron', 'Courier New';
+    background-color: rgba(160, 0, 0, 210);
+    border-top: 2px solid {NEON_RED_BRIGHT};
+    border-bottom: 2px solid {NEON_RED_BRIGHT};
+    padding: 5px 10px;
+    letter-spacing: 2px;
+"""
+STYLE_TEAM_SCORE_LABEL_GREEN = f"""
+    color: white;
+    font-weight: bold;
+    font-size: 15px;
+    font-family: 'Orbitron', 'Courier New';
+    background-color: rgba(0, 120, 0, 210);
+    border-top: 2px solid {NEON_GREEN_BRIGHT};
+    border-bottom: 2px solid {NEON_GREEN_BRIGHT};
+    padding: 5px 10px;
+    letter-spacing: 2px;
+"""
+STYLE_TEAM_SCORE_LABEL_FLASH_RED = f"""
+    color: {NEON_YELLOW};
+    font-weight: bold;
+    font-size: 17px;
+    font-family: 'Orbitron', 'Courier New';
+    background-color: rgba(210, 30, 0, 230);
+    border-top: 2px solid {NEON_YELLOW};
+    border-bottom: 2px solid {NEON_YELLOW};
+    padding: 5px 10px;
+    letter-spacing: 2px;
+"""
+STYLE_TEAM_SCORE_LABEL_FLASH_GREEN = f"""
+    color: {NEON_YELLOW};
+    font-weight: bold;
+    font-size: 17px;
+    font-family: 'Orbitron', 'Courier New';
+    background-color: rgba(0, 160, 30, 230);
+    border-top: 2px solid {NEON_YELLOW};
+    border-bottom: 2px solid {NEON_YELLOW};
+    padding: 5px 10px;
+    letter-spacing: 2px;
+"""
+STYLE_SECTION_LABEL = f"color: {NEON_CYAN}; font-weight: bold; font-size: 18px; font-family: 'Orbitron', 'Courier New'; letter-spacing: 2px;"
+STYLE_TIMER_DISPLAY = f"color: {NEON_YELLOW}; font-size: 52px; font-weight: bold; font-family: 'Orbitron', 'Courier New'; letter-spacing: 6px;"
+STYLE_GRID_HEADER = f"color: white; font-weight: bold; font-size: 11px; font-family: 'Orbitron', 'Courier New'; letter-spacing: 1px; background-color: rgba(0, 40, 80, 200); padding: 3px 2px;"
+STYLE_PLAYER_LABEL = "color: #ddeeff; font-size: 12px; font-family: 'Courier New', monospace;"
+STYLE_PLAYER_LABEL_ALT = "color: #ddeeff; font-size: 12px; font-family: 'Courier New', monospace; background-color: rgba(255, 255, 255, 6);"
+STYLE_EQUIP_LABEL = "color: rgba(0, 200, 255, 200); font-size: 12px; font-weight: bold; font-family: 'Courier New', monospace;"
+STYLE_EQUIP_LABEL_ALT = "color: rgba(0, 200, 255, 200); font-size: 12px; font-weight: bold; font-family: 'Courier New', monospace; background-color: rgba(255, 255, 255, 6);"
+STYLE_SCORE_LABEL = f"color: {NEON_YELLOW}; font-size: 14px; font-weight: bold; font-family: 'Orbitron', 'Courier New';"
+STYLE_SCORE_LABEL_ALT = f"color: {NEON_YELLOW}; font-size: 14px; font-weight: bold; font-family: 'Orbitron', 'Courier New'; background-color: rgba(255, 255, 255, 6);"
+STYLE_PLAYER_INDEX_LABEL = f"color: {NEON_CYAN}; font-weight: bold; font-family: 'Courier New'; font-size: 11px;"
+STYLE_HIT_FEED_LIST = f"""
+    QListWidget {{
+        background-color: rgba(0, 6, 20, 160);
+        color: {NEON_CYAN};
+        font-size: 12px;
+        font-family: 'Courier New', monospace;
         border: none;
-    }
-    QListWidget::item {
-        padding: 2px;
-    }
+        border-radius: 2px;
+    }}
+    QListWidget::item {{
+        padding: 3px 5px;
+        border-bottom: 1px solid rgba(0, 255, 255, 20);
+    }}
+    QListWidget::item:selected {{
+        background-color: rgba(0, 50, 80, 200);
+    }}
 """
+
+# =========================================================
+# Panel Paint Constants
+# =========================================================
+# Near-black fill with a subtle team tint — dark like the reference image panels
+COLOR_PANEL_BG_RED = (12, 0, 0, 235)
+COLOR_PANEL_BG_GREEN = (0, 14, 0, 235)
+COLOR_PANEL_GLOW_RED = (255, 40, 40)
+COLOR_PANEL_GLOW_GREEN = (40, 255, 100)
+# Layers: outer glow fades in → innermost is a solid bright border line
+PANEL_GLOW_LAYERS = [(8, 8), (5, 22), (3, 65), (2, 255)]
+PANEL_BORDER_RADIUS = 3
+PANEL_CORNER_MARK_SIZE = 16
 
 # =========================================================
 # Layout Sizes
@@ -308,4 +341,3 @@ GAME_DURATION_SECONDS = 360
 DEV_GAME_DURATION_SECONDS = 30
 
 APP_NAME = "Photon Main"
-# VERSION = "1.0.1"
