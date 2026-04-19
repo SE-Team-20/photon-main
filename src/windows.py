@@ -5,11 +5,11 @@ from sound_manager import SoundManager
 from PyQt6.QtWidgets import (
     QMainWindow, QVBoxLayout, QLineEdit, QLabel, QWidget, QPushButton,
     QFormLayout, QMessageBox, QHBoxLayout, QGridLayout, QGraphicsDropShadowEffect,
-    QListWidget, QListWidgetItem
+    QListWidget, QListWidgetItem, QSizePolicy, QApplication
 )
 from udp_server import UDPServer
 from PyQt6.QtGui import QGuiApplication, QPainter, QPen, QBrush, QColor, QFont, QPixmap, QImage
-from PyQt6.QtCore import Qt, QTimer, QEvent, pyqtSignal
+from PyQt6.QtCore import Qt, QTimer, QEvent, pyqtSignal, QSize, QPoint
 from util import isDevMode
 from constants import *
 from model import Model
@@ -551,13 +551,13 @@ class PlayActionWindow(QMainWindow):
         """)
         self.setCentralWidget(central_widget)
 
-        main_layout = QVBoxLayout(central_widget)
+        main_layout = QHBoxLayout(central_widget)
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        team_panel_layout = QHBoxLayout()
-        team_panel_layout.setContentsMargins(0, 0, 0, 0)
-        team_panel_layout.setSpacing(20)
+        left_column = QVBoxLayout()
+        left_column.setContentsMargins(0, 0, 0, 0)
+        left_column.setSpacing(15)
 
         # --- Red panel ---
         self.red_panel = RedTeamPanel()
@@ -594,7 +594,7 @@ class PlayActionWindow(QMainWindow):
         self.red_grid = QGridLayout()
         self.red_grid.setHorizontalSpacing(10)
         self.red_grid.setVerticalSpacing(4)
-        red_layout.addLayout(self.red_grid)
+        red_layout.addLayout(self.red_grid, 1)
 
         # --- Green panel ---
         self.green_panel = GreenTeamPanel()
@@ -631,14 +631,7 @@ class PlayActionWindow(QMainWindow):
         self.green_grid = QGridLayout()
         self.green_grid.setHorizontalSpacing(10)
         self.green_grid.setVerticalSpacing(4)
-        green_layout.addLayout(self.green_grid)
-
-        team_panel_layout.addWidget(self.red_panel, 1)
-        team_panel_layout.addWidget(self.green_panel, 1)
-
-        bottom_layout = QHBoxLayout()
-        bottom_layout.setContentsMargins(0, 0, 0, 0)
-        bottom_layout.setSpacing(20)
+        green_layout.addLayout(self.green_grid, 1)
 
         # Hit feed container
         hit_feed_container = QWidget()
@@ -654,6 +647,8 @@ class PlayActionWindow(QMainWindow):
 
         self.hit_list = QListWidget()
         self.hit_list.setStyleSheet(STYLE_HIT_FEED_LIST)
+        self.hit_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.hit_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         hit_feed_layout.addWidget(self.hit_list)
 
         # Timer container
@@ -666,10 +661,14 @@ class PlayActionWindow(QMainWindow):
 
         # Stretch pushes text/timer to the bottom, logo floats at top
         timer_layout.addStretch(1)
+        timer_layout.addSpacing(-16)
 
         self.phase_label = QLabel("Players get ready!")
-        self.phase_label.setStyleSheet(STYLE_SECTION_LABEL)
+        self.phase_label.setStyleSheet(STYLE_PHASE_LABEL_WHITE)
         self.phase_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.phase_label.setWordWrap(True)
+        self.phase_label.setMinimumWidth(0)
+        self.phase_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         timer_layout.addWidget(self.phase_label)
 
         self.time_display = QLabel("0:00")
@@ -691,11 +690,12 @@ class PlayActionWindow(QMainWindow):
         self.photon_logo_label.setStyleSheet("background: transparent; border: none;")
         self._load_photon_logo()
 
-        bottom_layout.addWidget(hit_feed_container, 2)
-        bottom_layout.addWidget(self.timer_container, 1)
+        left_column.addWidget(hit_feed_container, 6)
+        left_column.addWidget(self.timer_container, 5)
 
-        main_layout.addLayout(team_panel_layout, 1)
-        main_layout.addLayout(bottom_layout, 1)
+        main_layout.addLayout(left_column, 1)
+        main_layout.addWidget(self.red_panel, 2)
+        main_layout.addWidget(self.green_panel, 2)
 
         # Data structures for score updates
         self.score_labels = {}
@@ -715,6 +715,16 @@ class PlayActionWindow(QMainWindow):
 
         self.flash_timer = QTimer()
         self.flash_timer.timeout.connect(self._toggle_flash)
+
+        self._phase_glow_tick = 0
+        self._phase_glow_effect = QGraphicsDropShadowEffect()
+        self._phase_glow_effect.setColor(QColor(*PHASE_GLOW_COLOR))
+        self._phase_glow_effect.setOffset(0, 0)
+        self._phase_glow_effect.setBlurRadius(PHASE_GLOW_BLUR_MIN)
+        self.phase_label.setGraphicsEffect(self._phase_glow_effect)
+        self.phase_glow_timer = QTimer()
+        self.phase_glow_timer.timeout.connect(self._tick_phase_glow)
+        self.phase_glow_timer.start(PHASE_GLOW_TICK_MS)
 
     def _load_photon_logo(self):
         # Try float-logo.png first, fall back to logo.jpg
@@ -744,24 +754,44 @@ class PlayActionWindow(QMainWindow):
         if not hasattr(self, '_photon_logo_pixmap') or self._photon_logo_pixmap.isNull():
             return
         container = self.timer_container
-        max_w = int(container.width() * LOGO_MAX_WIDTH_RATIO)
-        max_h = int(container.height() * LOGO_MAX_HEIGHT_RATIO)
-        if max_w <= 0 or max_h <= 0:
+        phase_y = self.phase_label.mapTo(container, QPoint(0, 0)).y()
+        if phase_y <= 0:
+            phase_y = int(container.height() * (1 - LOGO_MAX_HEIGHT_RATIO))
+        # logo bottom sits at the midpoint between container top and phase_label top
+        logo_bottom = phase_y // 2
+        available_h = max(1, logo_bottom)
+        max_w = max(1, container.width() - 20)
+        if max_w <= 0 or available_h <= 0:
             return
         scaled = self._photon_logo_pixmap.scaled(
-            max_w, max_h,
+            max_w, available_h,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation
         )
         self.photon_logo_label.setPixmap(scaled)
         self.photon_logo_label.resize(scaled.size())
-        x = (container.width() - scaled.width()) // 2
-        self.photon_logo_label.move(x, 0)
+        x = (container.width() - scaled.width()) // 2 + 2
+        y = logo_bottom - scaled.height()
+        self.photon_logo_label.move(x, max(0, y))
         self.photon_logo_label.raise_()
+
+    def _set_phase_style(self, style, glow_color):
+        self.phase_label.setStyleSheet(style)
+        self._phase_glow_effect.setColor(QColor(*glow_color))
+
+    def _resize_hit_items(self):
+        count = self.hit_list.count()
+        if count == 0:
+            return
+        vh = self.hit_list.viewport().height()
+        item_h = max(1, vh // HIT_FEED_MAX_ITEMS)
+        for i in range(count):
+            self.hit_list.item(i).setSizeHint(QSize(0, item_h))
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         QTimer.singleShot(0, self._reposition_logo)
+        QTimer.singleShot(0, self._resize_hit_items)
 
     def add_hit(self, text):
         item = QListWidgetItem(text)
@@ -769,11 +799,13 @@ class PlayActionWindow(QMainWindow):
         self.hit_list.addItem(item)
         while self.hit_list.count() > HIT_FEED_MAX_ITEMS:
             self.hit_list.takeItem(0)
+        self._resize_hit_items()
         self.hit_list.scrollToBottom()
 
     def start_countdown(self):
         self.timer_state = "ready"
         self.phase_label.setText("Players get ready!")
+        self._set_phase_style(STYLE_PHASE_LABEL_WHITE, PHASE_GLOW_COLOR_WHITE)
         self.end_hint_label.setVisible(False)
         self.remaining_seconds = 0 if isDevMode() else COUNTDOWN_READY_SECONDS
         self.start_track_played = False
@@ -818,6 +850,7 @@ class PlayActionWindow(QMainWindow):
                 self.start_game()
                 self.timer_state = "game"
                 self.phase_label.setText("Game on!")
+                self._set_phase_style(STYLE_PHASE_LABEL, PHASE_GLOW_COLOR)
                 self.remaining_seconds = DEV_GAME_DURATION_SECONDS if isDevMode() else GAME_DURATION_SECONDS
                 self.update_timer_display()
             elif self.timer_state == "game":
@@ -826,10 +859,12 @@ class PlayActionWindow(QMainWindow):
                 self._reset_flash()
                 self.timer_state = "game_over"
                 self.phase_label.setText("Game Over")
+                self._set_phase_style(STYLE_PHASE_LABEL_RED, PHASE_GLOW_COLOR_RED)
                 self.time_display.setText("0:00")
                 self.end_hint_label.setVisible(True)
                 self.udp.announce_game_end()
                 self.sound.stop()
+                self.grabKeyboard()
             else:
                 self.timer.stop()
 
@@ -845,16 +880,22 @@ class PlayActionWindow(QMainWindow):
 
     def keyPressEvent(self, event):
         if self.timer_state == "game_over":
-            self.close_play_action_window()
+            self.releaseKeyboard()
+            self.close()
+
+    def closeEvent(self, event):
+        self.releaseKeyboard()
+        self.flash_timer.stop()
+        self.sound.stop()
+        self.hit_list.clear()
+        if self.timer_state == "game_over":
             self.main_window.show()
             self.main_window.raise_()
-
-    def hideEvent(self, event):
-        self.sound.stop()
-        super().hideEvent(event)
+        super().closeEvent(event)
 
     def close_play_action_window(self):
         self.flash_timer.stop()
+        self.hit_list.clear()
         self.hide()
 
     def refresh_players(self):
@@ -863,6 +904,9 @@ class PlayActionWindow(QMainWindow):
         self._score_glow_timers.clear()
         self._clear_grid(self.red_grid)
         self._clear_grid(self.green_grid)
+        for i in range(MAX_NUM_PLAYER):
+            self.red_grid.setRowStretch(i, 0)
+            self.green_grid.setRowStretch(i, 0)
         self.score_labels.clear()
         self.player_scores.clear()
         self.icon_labels.clear()
@@ -920,12 +964,16 @@ class PlayActionWindow(QMainWindow):
         name_label.setGraphicsEffect(_neon_glow(name_glow_color))
         name_hbox.addWidget(name_label, 1)
 
+        _expand = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        name_cell.setSizePolicy(_expand)
         grid.addWidget(name_cell, row, 0)
 
         score_label = QLabel("0")
         score_label.setStyleSheet(score_style)
         score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        score_label.setSizePolicy(_expand)
         grid.addWidget(score_label, row, 1)
+        grid.setRowStretch(row, 1)
 
         equip_id_int = int(equip_id)
         self.score_labels[equip_id_int] = (team, score_label)
@@ -1051,6 +1099,15 @@ class PlayActionWindow(QMainWindow):
 
         self.red_team_score_label.setStyleSheet(red_style)
         self.green_team_score_label.setStyleSheet(green_style)
+
+    def _tick_phase_glow(self):
+        cycle_ticks = max(1, PHASE_GLOW_CYCLE_MS // PHASE_GLOW_TICK_MS)
+        self._phase_glow_tick = (self._phase_glow_tick + 1) % cycle_ticks
+        half = max(1, cycle_ticks // 2)
+        pos = self._phase_glow_tick
+        t = pos / half if pos < half else (cycle_ticks - pos) / half
+        blur = int(PHASE_GLOW_BLUR_MIN + t * (PHASE_GLOW_BLUR_MAX - PHASE_GLOW_BLUR_MIN))
+        self._phase_glow_effect.setBlurRadius(blur)
 
 class RedTeamPanel(QWidget):
     def paintEvent(self, event):

@@ -105,7 +105,7 @@ class Model:
     if self._get_team(hitter) is not None and self._get_team(hitter) == self._get_team(receiver):
       self._grant_score(hitter, PENALTY_TAKEDOWN)
       self._grant_score(receiver, PENALTY_TAKEDOWN)
-      self._insertLiveMessage(f"{hitter_name} hit teammate {receiver_name} (-10 each)")
+      self._insertLiveMessage(f"{hitter_name} hit teammate {receiver_name}")
       self.udp.broadcast_equipment_id(hitter)
     else:
       self._grant_score(hitter, SCORE_TAKEDOWN)
