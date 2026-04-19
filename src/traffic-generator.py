@@ -4,90 +4,113 @@ import time
 
 from util import isDevMode
 
-bufferSize = 1024
-friendly_fire = 0
-serverAddressPort = ("0.0.0.0", 7500)
-clientAddressPort = ("127.0.0.1", 7501)
+BUFFER_SIZE = 1024
+SERVER_ADDR = ("0.0.0.0", 7500)
+CLIENT_ADDR = ("127.0.0.1", 7501)
+
+CODE_GAME_START = "202"
+CODE_GAME_END = "221"
+BASE_GREEN = "43"
+BASE_RED = "53"
+
+if isDevMode():
+    red_players = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29]
+    green_players = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+else:
+    print("[TG] Enter equipment IDs for RED team (odd numbers, up to 15 players).")
+    print("[TG] Press Enter to stop adding players.\n")
+    red_players = []
+    for i in range(1, 16):
+        val = input(f"[TG] Red player {i} equipment ID (or Enter to stop): ").strip()
+        if not val:
+            break
+        red_players.append(int(val))
+
+    print("\n[TG] Enter equipment IDs for GREEN team (even numbers, up to 15 players).")
+    print("[TG] Press Enter to stop adding players.\n")
+    green_players = []
+    for i in range(1, 16):
+        val = input(f"[TG] Green player {i} equipment ID (or Enter to stop): ").strip()
+        if not val:
+            break
+        green_players.append(int(val))
+
+if not red_players or not green_players:
+    print("[TG] Error: at least 1 player per team required.")
+    exit(1)
+
+print(f"\n[TG] Red team  ({len(red_players)} players): {red_players}")
+print(f"[TG] Green team ({len(green_players)} players): {green_players}")
+
+recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+recv_sock.bind(SERVER_ADDR)
+
+print("\n[TG] Waiting for game start signal from main.py...")
+data = ""
+while data != CODE_GAME_START:
+    data, _ = recv_sock.recvfrom(BUFFER_SIZE)
+    data = data.decode("utf-8")
+    print(f"[TG] Received: {data}")
+
+print("[TG] Game started! Simulating laser tag...\n")
 
 
-print("[TG] this program will generate some test traffic for 2 players on the red ")
-print("[TG] team as well as 2 players on the green team\n")
+def recv_one():
+    data, _ = recv_sock.recvfrom(BUFFER_SIZE)
+    return data.decode("utf-8")
 
-red1 = "1" if isDevMode() else input("[TG] Enter equipment id of red player 1 ==> ")
-red2 = "3" if isDevMode() else input("[TG] Enter equipment id of red player 2 ==> ")
-green1 = "2" if isDevMode() else input("[TG] Enter equipment id of green player 1 ==> ")
-green2 = "4" if isDevMode() else input("[TG] Enter equipment id of green player 2 ==> ")
 
-# Create datagram sockets
-UDPServerSocketReceive = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-UDPClientSocketTransmit = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+def send_event(message, friendly_fire=False, base_hit=False):
+    print(f"[TG] >> {message}")
+    send_sock.sendto(message.encode(), CLIENT_ADDR)
+    if base_hit:
+        # Model does not broadcast back for base hits — no recv needed
+        return ""
+    resp = recv_one()
+    print(f"[TG] << {resp}")
+    if friendly_fire:
+        resp2 = recv_one()
+        print(f"[TG] << {resp2}")
+        return resp2
+    return resp
 
-# bind server socket
-UDPServerSocketReceive.bind(serverAddressPort)
 
-# wait for start from game software
-print("")
-print("[TG] waiting for start the start signal from main.py")
+game_over = False
+while not game_over:
+    roll = random.random()
 
-received_data = " "
-while received_data != "202":
-    received_data, address = UDPServerSocketReceive.recvfrom(bufferSize)
-    received_data = received_data.decode("utf-8")
-    print("[TG] Received from main.py: " + received_data)
-print("")
+    if roll < 0.62:
+        # Cross-team takedown
+        is_red_shooter = random.random() < 0.5
+        shooter = random.choice(red_players if is_red_shooter else green_players)
+        target = random.choice(green_players if is_red_shooter else red_players)
+        resp = send_event(f"{shooter}:{target}")
+        if resp == CODE_GAME_END:
+            break
 
-# create events, random player and order
-counter = 0
+    elif roll < 0.77:
+        # Base hit — model does not broadcast back, skip recv
+        is_red_shooter = random.random() < 0.5
+        shooter = random.choice(red_players if is_red_shooter else green_players)
+        base = BASE_GREEN if is_red_shooter else BASE_RED
+        send_event(f"{shooter}:{base}", base_hit=True)
 
-while True:
-    if random.randint(1, 2) == 1:
-        redplayer = red1
     else:
-        redplayer = red2
+        # Friendly fire — model broadcasts back twice (receiver penalty + hitter penalty)
+        team = red_players if random.random() < 0.5 else green_players
+        if len(team) < 2:
+            shooter = random.choice(red_players)
+            target = random.choice(green_players)
+            resp = send_event(f"{shooter}:{target}")
+            if resp == CODE_GAME_END:
+                break
+        else:
+            shooter, target = random.sample(team, 2)
+            resp = send_event(f"{shooter}:{target}", friendly_fire=True)
+            if resp == CODE_GAME_END:
+                break
 
-    if random.randint(1, 2) == 1:
-        greenplayer = green1
-    else:
-        greenplayer = green2
+    time.sleep(random.uniform(0.4, 1.8))
 
-    if random.randint(1, 2) == 1:
-        message = str(redplayer) + ":" + str(greenplayer)
-    else:
-        message = str(greenplayer) + ":" + str(redplayer)
-
-    # after 5 iterations, send friendly fire hit
-    if counter == 5:
-        message = str(red1) + ":" + str(red2)
-        friendly_fire = 1
-
-    # after 10 iterations, send base hit
-    if counter == 10:
-        message = str(redplayer) + ":43"
-    if counter == 20:
-        message = str(greenplayer) + ":53"
-
-    print("[TG] transmitting to game: " + message)
-
-    UDPClientSocketTransmit.sendto(str.encode(str(message)), clientAddressPort)
-    # receive answer from game softare
-
-    received_data, address = UDPServerSocketReceive.recvfrom(bufferSize)
-    received_data = received_data.decode("utf-8")
-
-    print("[TG] Received from main.py: " + received_data)
-    print("")
-
-    # if we have friendly fire, do a second receive
-    if friendly_fire == 1:
-        received_data, address = UDPServerSocketReceive.recvfrom(bufferSize)
-        received_data = received_data.decode("utf-8")
-        friendly_fire = 0
-        print("[TG] Received from game software: " + received_data)
-        print("")
-
-    counter = counter + 1
-    if received_data == "221":
-        break
-    time.sleep(random.randint(1, 3))
-
-print("[TG] program complete")
+print("[TG] Game over. Traffic generator complete.")

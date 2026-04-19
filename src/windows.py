@@ -14,6 +14,22 @@ from util import isDevMode
 from constants import *
 from model import Model
 
+def _team_score_html(value: int) -> str:
+    return (
+        f'<span style="font-family:\'Press Start 2P\',monospace;font-size:8px;color:white;">'
+        f'TEAM SCORE</span>'
+        f'&nbsp;&nbsp;'
+        f'<span style="font-family:\'Audiowide\',sans-serif;font-size:18px;'
+        f'font-weight:bold;color:{NEON_YELLOW};">{value}</span>'
+    )
+
+def _team_glow() -> QGraphicsDropShadowEffect:
+    fx = QGraphicsDropShadowEffect()
+    fx.setBlurRadius(TEAM_LABEL_GLOW_BLUR)
+    fx.setOffset(0, 0)
+    fx.setColor(QColor(*TEAM_LABEL_GLOW_COLOR))
+    return fx
+
 class UDPConfigWindow(QWidget):
     def __init__(self, window_size):
         super().__init__()
@@ -21,6 +37,7 @@ class UDPConfigWindow(QWidget):
         self.resize(window_size)
         self.setObjectName("ConfigWindow")
         self.setStyleSheet(STYLE_CONFIG_WINDOW)
+        load_application_fonts()
         layout = QVBoxLayout(self)
         layout.addStretch()
         title = QLabel("UDP Network Setup")
@@ -179,6 +196,9 @@ class MainWindow(QMainWindow):
         self.new_game_button.raise_()
         self.new_game_button.clicked.connect(self.clear_all_grids)
 
+        if isDevMode():
+            self._populate_dev_entries()
+
         self.play_action_window = PlayActionWindow(self, self.udp, self.model)
         self.start_game_button = QPushButton("Start Game", self.centralWidget())
         self.start_game_button.setFixedSize(ACTION_BUTTON_WIDTH, ACTION_BUTTON_HEIGHT)
@@ -193,6 +213,22 @@ class MainWindow(QMainWindow):
         self.start_game_button.setGraphicsEffect(start_shadow)
         self.start_game_button.raise_()
         self.start_game_button.clicked.connect(self.show_play_action_window)
+
+    def _populate_dev_entries(self):
+        for i, (row, equip) in enumerate(zip(self.red_entries, DEV_RED_EQUIP_IDS)):
+            row[0].setText(str(i + 1))
+            row[1].setText(DEV_CODENAMES[i])
+            row[1].setReadOnly(False)
+            row[2].setText(str(equip))
+            row[2].setReadOnly(False)
+            self.red_index_labels[i].setText(f"Player #{i + 1}")
+        for i, (row, equip) in enumerate(zip(self.green_entries, DEV_GREEN_EQUIP_IDS)):
+            row[0].setText(str(i + 16))
+            row[1].setText(DEV_CODENAMES[i])
+            row[1].setReadOnly(False)
+            row[2].setText(str(equip))
+            row[2].setReadOnly(False)
+            self.green_index_labels[i].setText(f"Player #{i + 1}")
 
     def update_panel_sizes(self):
         w = self.width()
@@ -215,7 +251,7 @@ class MainWindow(QMainWindow):
         eq_prompt = QLabel("Equipment ID")
         codename_prompt = QLabel("Codename")
         for lbl in (id_prompt, codename_prompt, eq_prompt):
-            lbl.setStyleSheet(STYLE_GRID_HEADER)
+            lbl.setStyleSheet(STYLE_ENTRY_GRID_HEADER)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         player_entry_grid.addWidget(id_prompt, 0, 1)
         player_entry_grid.addWidget(codename_prompt, 0, 2)
@@ -307,7 +343,7 @@ class MainWindow(QMainWindow):
         if codename:
             row_data[1].setText(codename)
             row_data[1].setReadOnly(False)
-            row_data[1].setStyleSheet(f"{background}; color: black;")
+            row_data[1].setStyleSheet(background)
             row_data[1].setPlaceholderText("")
             row_data[2].setReadOnly(False)
             row_data[2].setFocus()
@@ -356,7 +392,7 @@ class MainWindow(QMainWindow):
 
         if isDevMode():
             row_data[2].setReadOnly(False)
-            row_data[1].setStyleSheet(f"{background}; color: black;")
+            row_data[1].setStyleSheet(background)
             row_data[2].setFocus()
             return
 
@@ -364,7 +400,7 @@ class MainWindow(QMainWindow):
 
         if result == NEW_CODENAME_ADDED:
             row_data[2].setReadOnly(False)
-            row_data[1].setStyleSheet(f"{background}; color: black;")
+            row_data[1].setStyleSheet(background)
             row_data[1].setPlaceholderText("")
             msg = QMessageBox(self)
             msg.setStyleSheet(COOL_FONT)
@@ -374,7 +410,7 @@ class MainWindow(QMainWindow):
             msg.exec()
         elif result == EXISTING_CODENAME_UPDATED:
             row_data[2].setReadOnly(False)
-            row_data[1].setStyleSheet(f"{background}; color: black;")
+            row_data[1].setStyleSheet(background)
             row_data[1].setPlaceholderText("")
             msg = QMessageBox(self)
             msg.setStyleSheet(COOL_FONT)
@@ -443,7 +479,7 @@ class MainWindow(QMainWindow):
         if not isDevMode() and self.db._queue_player(id_text, 0 if team == "RED" else 1, equip_id):
             print(f"[{team}] SUCCESS - Player: {id_text}, Equipment: {equip_id}, Player Index: {index}")
 
-        row_data[2].setStyleSheet(f"{background}; color: black; font-weight: bold; font-size: 12px;")
+        row_data[2].setStyleSheet(background)
         self.udp.broadcast_equipment_id(equip_id)
         if index < MAX_NUM_PLAYER_MINUSONE:
             next_row = self.red_entries[index+1] if team == "RED" else self.green_entries[index+1]
@@ -533,23 +569,22 @@ class PlayActionWindow(QMainWindow):
         self.red_label = QLabel("RED TEAM")
         self.red_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.red_label.setStyleSheet(STYLE_TEAM_LABEL_PLAY_RED)
-        red_label_shadow = QGraphicsDropShadowEffect()
-        red_label_shadow.setBlurRadius(BLUR_RADIUS)
-        red_label_shadow.setOffset(*DROPSHADOW_OFFSET_AMOUNT)
-        red_label_shadow.setColor(QColor(*SHADOW_COLOR))
-        self.red_label.setGraphicsEffect(red_label_shadow)
+        self.red_label.setGraphicsEffect(_team_glow())
         red_layout.addWidget(self.red_label)
 
-        self.red_team_score_label = QLabel("Team Score: 0")
+        self.red_team_score_label = QLabel()
+        self.red_team_score_label.setTextFormat(Qt.TextFormat.RichText)
+        self.red_team_score_label.setText(_team_score_html(0))
         self.red_team_score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.red_team_score_label.setStyleSheet(STYLE_TEAM_SCORE_LABEL_RED)
+        self.red_team_score_label.setGraphicsEffect(_team_glow())
         red_layout.addWidget(self.red_team_score_label)
 
         # Red column headers (permanent, above the player rows)
         red_header_grid = QGridLayout()
         red_header_grid.setHorizontalSpacing(10)
         red_header_grid.setVerticalSpacing(0)
-        for col, text in enumerate(["", "ID", "Codename", "Equip", "Score"]):
+        for col, text in enumerate(["Codename", "Score"]):
             lbl = QLabel(text)
             lbl.setStyleSheet(STYLE_GRID_HEADER)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -571,23 +606,22 @@ class PlayActionWindow(QMainWindow):
         self.green_label = QLabel("GREEN TEAM")
         self.green_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.green_label.setStyleSheet(STYLE_TEAM_LABEL_PLAY_GREEN)
-        green_label_shadow = QGraphicsDropShadowEffect()
-        green_label_shadow.setBlurRadius(BLUR_RADIUS)
-        green_label_shadow.setOffset(*DROPSHADOW_OFFSET_AMOUNT)
-        green_label_shadow.setColor(QColor(*SHADOW_COLOR))
-        self.green_label.setGraphicsEffect(green_label_shadow)
+        self.green_label.setGraphicsEffect(_team_glow())
         green_layout.addWidget(self.green_label)
 
-        self.green_team_score_label = QLabel("Team Score: 0")
+        self.green_team_score_label = QLabel()
+        self.green_team_score_label.setTextFormat(Qt.TextFormat.RichText)
+        self.green_team_score_label.setText(_team_score_html(0))
         self.green_team_score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.green_team_score_label.setStyleSheet(STYLE_TEAM_SCORE_LABEL_GREEN)
+        self.green_team_score_label.setGraphicsEffect(_team_glow())
         green_layout.addWidget(self.green_team_score_label)
 
         # Green column headers (permanent, above the player rows)
         green_header_grid = QGridLayout()
         green_header_grid.setHorizontalSpacing(10)
         green_header_grid.setVerticalSpacing(0)
-        for col, text in enumerate(["", "ID", "Codename", "Equip", "Score"]):
+        for col, text in enumerate(["Codename", "Score"]):
             lbl = QLabel(text)
             lbl.setStyleSheet(STYLE_GRID_HEADER)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -667,6 +701,9 @@ class PlayActionWindow(QMainWindow):
         self.score_labels = {}
         self.player_scores = {}
         self.icon_labels = {}
+        self.red_row_list = []
+        self.green_row_list = []
+        self._score_glow_timers = {}
         self.red_team_score = 0
         self.green_team_score = 0
         self.flash_visible = False
@@ -716,7 +753,7 @@ class PlayActionWindow(QMainWindow):
         # Shift left of center by ~8% of container width
         x = (container.width() - scaled.width()) // 2 - int(container.width() * 0.08)
         # Pin to top with small padding
-        y = 6
+        y = 0
         self.photon_logo_label.move(x, y)
         self.photon_logo_label.raise_()
 
@@ -817,26 +854,31 @@ class PlayActionWindow(QMainWindow):
         self.hide()
 
     def refresh_players(self):
+        for t in self._score_glow_timers.values():
+            t.stop()
+        self._score_glow_timers.clear()
         self._clear_grid(self.red_grid)
         self._clear_grid(self.green_grid)
         self.score_labels.clear()
         self.player_scores.clear()
         self.icon_labels.clear()
+        self.red_row_list.clear()
+        self.green_row_list.clear()
         self.model.equip_to_team.clear()
 
         red_data = self.main_window.get_red_team_data()
         for row, (player_id, codename, equip_id) in enumerate(red_data, start=0):
-            self._add_player_row(self.red_grid, row, player_id, codename, equip_id, "red")
+            name_cell, score_label, name_label = self._add_player_row(self.red_grid, row, player_id, codename, equip_id, "red")
+            self.red_row_list.append({'equip_id': int(equip_id), 'name_cell': name_cell, 'score_label': score_label, 'name_label': name_label})
             self.model.equip_to_codename[int(equip_id)] = codename
             self.model.equip_to_team[int(equip_id)] = Model.RED
-            print(f"[Window] equip_to_codename populated: {self.model.equip_to_codename}")
 
         green_data = self.main_window.get_green_team_data()
         for row, (player_id, codename, equip_id) in enumerate(green_data, start=0):
-            self._add_player_row(self.green_grid, row, player_id, codename, equip_id, "green")
+            name_cell, score_label, name_label = self._add_player_row(self.green_grid, row, player_id, codename, equip_id, "green")
+            self.green_row_list.append({'equip_id': int(equip_id), 'name_cell': name_cell, 'score_label': score_label, 'name_label': name_label})
             self.model.equip_to_codename[int(equip_id)] = codename
             self.model.equip_to_team[int(equip_id)] = Model.GREEN
-            print(f"[Window] equip_to_codename populated: {self.model.equip_to_codename}")
 
     def _clear_grid(self, grid):
         while grid.count():
@@ -845,40 +887,47 @@ class PlayActionWindow(QMainWindow):
             if widget:
                 widget.deleteLater()
 
-    def _add_player_row(self, grid, row, player_id, codename, equip_id, team):
+    def _add_player_row(self, grid, row, _player_id, codename, equip_id, team):
         alt = row % 2 == 0
         player_style = STYLE_PLAYER_LABEL_ALT if alt else STYLE_PLAYER_LABEL
-        equip_style = STYLE_EQUIP_LABEL_ALT if alt else STYLE_EQUIP_LABEL
         score_style = STYLE_SCORE_LABEL_ALT if alt else STYLE_SCORE_LABEL
 
+        def _neon_glow(color=PLAYER_LABEL_GLOW_COLOR):
+            fx = QGraphicsDropShadowEffect()
+            fx.setBlurRadius(PLAYER_LABEL_GLOW_BLUR)
+            fx.setOffset(*PLAYER_LABEL_SHADOW_OFFSET)
+            fx.setColor(QColor(*color))
+            return fx
+
+        name_cell = QWidget()
+        name_hbox = QHBoxLayout(name_cell)
+        name_hbox.setContentsMargins(2, 1, 2, 1)
+        name_hbox.setSpacing(4)
+
         icon = QLabel()
-        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(icon, row, 0)
+        icon.setFixedWidth(BASEICON_SIZE)
+        icon.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+        name_hbox.addWidget(icon)
 
-        id_label = QLabel(str(player_id))
-        id_label.setStyleSheet(player_style)
-        id_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(id_label, row, 1)
-
+        name_glow_color = PLAYER_LABEL_GLOW_COLOR_RED if team == "red" else PLAYER_LABEL_GLOW_COLOR_GREEN
         name_label = QLabel(codename)
         name_label.setStyleSheet(player_style)
-        name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(name_label, row, 2)
+        name_label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+        name_label.setGraphicsEffect(_neon_glow(name_glow_color))
+        name_hbox.addWidget(name_label, 1)
 
-        equip_label = QLabel(str(equip_id))
-        equip_label.setStyleSheet(equip_style)
-        equip_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(equip_label, row, 3)
+        grid.addWidget(name_cell, row, 0)
 
         score_label = QLabel("0")
         score_label.setStyleSheet(score_style)
         score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid.addWidget(score_label, row, 4)
+        grid.addWidget(score_label, row, 1)
 
         equip_id_int = int(equip_id)
         self.score_labels[equip_id_int] = (team, score_label)
         self.player_scores[equip_id_int] = 0
         self.icon_labels[equip_id_int] = icon
+        return name_cell, score_label, name_label
 
     def grant_baseicon(self, equip_id):
         if equip_id not in self.icon_labels:
@@ -886,7 +935,6 @@ class PlayActionWindow(QMainWindow):
             return
         label = self.icon_labels[equip_id]
         pixmap = QPixmap(str(IMAGES_DIR / "baseicon.jpg"))
-
         if pixmap.isNull():
             label.clear()
             return
@@ -899,15 +947,64 @@ class PlayActionWindow(QMainWindow):
         label.setPixmap(scaled)
         print(f"baseicon is now reflected to {equip_id}")
 
+    def _resort_grid(self, grid, row_list):
+        row_list.sort(key=lambda r: self.player_scores.get(r['equip_id'], 0), reverse=True)
+        for r in row_list:
+            grid.removeWidget(r['name_cell'])
+            grid.removeWidget(r['score_label'])
+        for new_row, r in enumerate(row_list):
+            alt = new_row % 2 == 0
+            r['name_label'].setStyleSheet(STYLE_PLAYER_LABEL_ALT if alt else STYLE_PLAYER_LABEL)
+            r['score_label'].setStyleSheet(STYLE_SCORE_LABEL_ALT if alt else STYLE_SCORE_LABEL)
+            grid.addWidget(r['name_cell'], new_row, 0)
+            grid.addWidget(r['score_label'], new_row, 1)
+
+    def _start_score_glow(self, equip_id):
+        if equip_id in self._score_glow_timers:
+            self._score_glow_timers.pop(equip_id).stop()
+        if equip_id not in self.score_labels:
+            return
+        _, label = self.score_labels[equip_id]
+
+        effect = QGraphicsDropShadowEffect()
+        effect.setColor(QColor(*SCORE_GLOW_COLOR))
+        effect.setOffset(0, 0)
+        effect.setBlurRadius(SCORE_GLOW_BLUR_MAX)
+        label.setGraphicsEffect(effect)
+
+        ticks_total = SCORE_GLOW_DURATION_MS // SCORE_GLOW_TICK_MS
+        cycle_len = max(1, ticks_total // SCORE_GLOW_CYCLES)
+        half_cycle = max(1, cycle_len // 2)
+        tick = [0]
+
+        def _tick():
+            tick[0] += 1
+            if tick[0] >= ticks_total:
+                timer.stop()
+                label.setGraphicsEffect(None)
+                self._score_glow_timers.pop(equip_id, None)
+                return
+            pos = tick[0] % cycle_len
+            t = pos / half_cycle if pos < half_cycle else (cycle_len - pos) / half_cycle
+            effect.setBlurRadius(int(SCORE_GLOW_BLUR_MIN + t * (SCORE_GLOW_BLUR_MAX - SCORE_GLOW_BLUR_MIN)))
+
+        timer = QTimer()
+        timer.timeout.connect(_tick)
+        timer.start(SCORE_GLOW_TICK_MS)
+        self._score_glow_timers[equip_id] = timer
+
     def reflect_score_change(self, equip_id, diff):
         if equip_id not in self.score_labels:
             print(f"Warning: Score received for unknown equipment ID {equip_id}")
             return
 
-        _, label = self.score_labels[equip_id]
+        team, label = self.score_labels[equip_id]
         self.player_scores[equip_id] += diff
         label.setText(str(self.player_scores[equip_id]))
         self._update_team_scores()
+        self._start_score_glow(equip_id)
+        row_list = self.red_row_list if team == "red" else self.green_row_list
+        self._resort_grid(self.red_grid if team == "red" else self.green_grid, row_list)
 
     def reset_scores(self):
         for equip_id in self.player_scores:
@@ -916,8 +1013,8 @@ class PlayActionWindow(QMainWindow):
                 self.score_labels[equip_id][1].setText("0")
         self.red_team_score = 0
         self.green_team_score = 0
-        self.red_team_score_label.setText("Team Score: 0")
-        self.green_team_score_label.setText("Team Score: 0")
+        self.red_team_score_label.setText(_team_score_html(0))
+        self.green_team_score_label.setText(_team_score_html(0))
 
     def _update_team_scores(self):
         red_total = sum(
@@ -930,8 +1027,8 @@ class PlayActionWindow(QMainWindow):
         )
         self.red_team_score = red_total
         self.green_team_score = green_total
-        self.red_team_score_label.setText(f"Team Score: {red_total}")
-        self.green_team_score_label.setText(f"Team Score: {green_total}")
+        self.red_team_score_label.setText(_team_score_html(red_total))
+        self.green_team_score_label.setText(_team_score_html(green_total))
 
     def _reset_flash(self):
         self.red_team_score_label.setStyleSheet(STYLE_TEAM_SCORE_LABEL_RED)
@@ -975,8 +1072,8 @@ class RedTeamPanel(QWidget):
         cs = PANEL_CORNER_MARK_SIZE
         cr = PANEL_BORDER_RADIUS
         w, h = r.width() - 1, r.height() - 1
-        corner_pen = QPen(QColor(*COLOR_PANEL_GLOW_RED, 255))
-        corner_pen.setWidth(2)
+        corner_pen = QPen(QColor(*COLOR_CORNER_MARK_RED, 255))
+        corner_pen.setWidth(PANEL_CORNER_MARK_WIDTH)
         painter.setPen(corner_pen)
         painter.drawLine(cr, 1, cr + cs, 1)
         painter.drawLine(1, cr, 1, cr + cs)
@@ -1011,8 +1108,8 @@ class GreenTeamPanel(QWidget):
         cs = PANEL_CORNER_MARK_SIZE
         cr = PANEL_BORDER_RADIUS
         w, h = r.width() - 1, r.height() - 1
-        corner_pen = QPen(QColor(*COLOR_PANEL_GLOW_GREEN, 255))
-        corner_pen.setWidth(2)
+        corner_pen = QPen(QColor(*COLOR_CORNER_MARK_GREEN, 255))
+        corner_pen.setWidth(PANEL_CORNER_MARK_WIDTH)
         painter.setPen(corner_pen)
         painter.drawLine(cr, 1, cr + cs, 1)
         painter.drawLine(1, cr, 1, cr + cs)
