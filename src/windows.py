@@ -728,14 +728,15 @@ class PlayActionWindow(QMainWindow):
         # Crop bottom 28% to remove the "Ultimate Game on Planet Earth" banner
         crop_h = int(pixmap.height() * 0.72)
         pixmap = pixmap.copy(0, 0, pixmap.width(), crop_h)
-        # Make white/near-white pixels transparent
+        # Make white/near-white pixels transparent via raw bytearray (BGRA byte order)
         image = pixmap.toImage().convertToFormat(QImage.Format.Format_ARGB32)
-        for y in range(image.height()):
-            for x in range(image.width()):
-                c = image.pixelColor(x, y)
-                if c.red() > 215 and c.green() > 215 and c.blue() > 215:
-                    c.setAlpha(0)
-                    image.setPixelColor(x, y, c)
+        ptr = image.bits()
+        ptr.setsize(image.sizeInBytes())
+        ba = bytearray(ptr)
+        for i in range(0, len(ba), 4):
+            if ba[i + 2] > 215 and ba[i + 1] > 215 and ba[i] > 215:
+                ba[i + 3] = 0
+        image = QImage(bytes(ba), image.width(), image.height(), QImage.Format.Format_ARGB32)
         self._photon_logo_pixmap = QPixmap.fromImage(image)
         self._reposition_logo()
 
@@ -743,28 +744,31 @@ class PlayActionWindow(QMainWindow):
         if not hasattr(self, '_photon_logo_pixmap') or self._photon_logo_pixmap.isNull():
             return
         container = self.timer_container
-        # 55% width — compact, sits at top without crowding the timer text
-        max_w = int(container.width() * 0.55)
-        scaled = self._photon_logo_pixmap.scaledToWidth(
-            max_w, Qt.TransformationMode.SmoothTransformation
+        max_w = int(container.width() * LOGO_MAX_WIDTH_RATIO)
+        max_h = int(container.height() * LOGO_MAX_HEIGHT_RATIO)
+        if max_w <= 0 or max_h <= 0:
+            return
+        scaled = self._photon_logo_pixmap.scaled(
+            max_w, max_h,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
         )
         self.photon_logo_label.setPixmap(scaled)
         self.photon_logo_label.resize(scaled.size())
-        # Shift left of center by ~8% of container width
-        x = (container.width() - scaled.width()) // 2 - int(container.width() * 0.08)
-        # Pin to top with small padding
-        y = 0
-        self.photon_logo_label.move(x, y)
+        x = (container.width() - scaled.width()) // 2
+        self.photon_logo_label.move(x, 0)
         self.photon_logo_label.raise_()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self._reposition_logo()
+        QTimer.singleShot(0, self._reposition_logo)
 
     def add_hit(self, text):
         item = QListWidgetItem(text)
         item.setTextAlignment(Qt.AlignmentFlag.AlignLeft)
         self.hit_list.addItem(item)
+        while self.hit_list.count() > HIT_FEED_MAX_ITEMS:
+            self.hit_list.takeItem(0)
         self.hit_list.scrollToBottom()
 
     def start_countdown(self):

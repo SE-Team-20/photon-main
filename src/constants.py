@@ -294,7 +294,7 @@ SCORE_GLOW_BLUR_MAX = 38
 SCORE_GLOW_BLUR_MIN = 4
 SCORE_GLOW_TICK_MS = 40
 SCORE_GLOW_DURATION_MS = 2000
-SCORE_GLOW_CYCLES = 3
+SCORE_GLOW_CYCLES = 1
 # Play-window column headers — Audiowide, smaller so they don't crowd
 STYLE_GRID_HEADER = f"color: {NEON_BLUE_TEXT}; font-weight: bold; font-size: 11px; font-family: {AUDIOWIDE_FONT_FAMILY}; background-color: rgba(0, 40, 80, 200); padding: 4px 2px; letter-spacing: 1px;"
 # Entry-window column headers keep Orbitron
@@ -308,6 +308,7 @@ STYLE_SCORE_LABEL = f"color: {NEON_YELLOW}; font-size: 16px; font-weight: bold; 
 STYLE_SCORE_LABEL_ALT = f"color: {NEON_YELLOW}; font-size: 16px; font-weight: bold; font-family: {AUDIOWIDE_FONT_FAMILY}; background-color: rgba(255, 255, 255, 6);"
 STYLE_PLAYER_INDEX_LABEL = f"color: {NEON_CYAN}; font-weight: bold; font-family: 'Courier New'; font-size: 11px;"
 STYLE_BASE_CODENAME_LABEL = f"color: {NEON_YELLOW}; font-size: 11px; font-family: {AUDIOWIDE_FONT_FAMILY};"
+HIT_FEED_MAX_ITEMS = 10
 STYLE_HIT_FEED_LIST = f"""
     QListWidget {{
         background-color: rgba(0, 6, 20, 160);
@@ -355,6 +356,8 @@ CODENAME_FIELD_WIDTH = 140
 PLAYER_INDEX_LABEL_WIDTH = 70
 BASEICON_SIZE = 32
 BASEICON_COL_WIDTH = 46
+LOGO_MAX_WIDTH_RATIO = 0.55
+LOGO_MAX_HEIGHT_RATIO = 0.48
 
 # =========================================================
 # Timing
