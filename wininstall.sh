@@ -5,17 +5,14 @@ set -e
 
 cd "$(dirname "$0")"
 
-echo "Adding contrib, non-free, and backports repos..."
+echo "Adding contrib and non-free repos..."
 sudo sed -i 's/ main$/ main contrib non-free/' /etc/apt/sources.list
-if ! grep -q "bullseye-backports" /etc/apt/sources.list; then
-    echo "deb http://deb.debian.org/debian bullseye-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
-fi
 
 echo "Updating system packages..."
 sudo apt update && sudo apt upgrade -y
 
-echo "Installing Python 3.11 from backports..."
-sudo apt install -y -t bullseye-backports python3.11 python3.11-venv python3.11-dev
+echo "Installing Python..."
+sudo apt install -y python3 python3-venv python3-pip python3-dev
 
 echo "Installing Qt platform dependencies..."
 sudo apt install -y \
@@ -43,14 +40,14 @@ sudo apt install -y \
 echo "Installing database and build dependencies..."
 sudo apt install -y build-essential libpq-dev postgresql-client
 
-echo "Creating fresh virtual environment with Python 3.11..."
+echo "Creating fresh virtual environment..."
 rm -rf venv
-python3.11 -m venv venv
+python3 -m venv venv
 
 echo "Activating virtual environment and installing Python packages..."
 source venv/bin/activate
 pip install --upgrade pip setuptools wheel
-pip install PyQt6 psycopg2-binary pygame
+pip install "PyQt6==6.6.1" psycopg2-binary pygame
 
 echo "--------------------------------------------------"
 echo "Installation complete!"
