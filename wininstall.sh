@@ -12,7 +12,14 @@ sudo apt install -y \
     libxcb-util1 \
     libxcb-xinerama0 \
     libpulse0 \
-    pulseaudio
+    pulseaudio \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-libav \
+    libgstreamer1.0-0 \
+    python3-pyqt6.qtmultimedia
 
 echo "Installing Python and venv..."
 sudo apt install -y python3 python3-venv python3-pip

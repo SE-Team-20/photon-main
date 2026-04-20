@@ -6,3 +6,4 @@ test.py
 .DS_Store
 *.*~
 /venv
+src/traffic-generator.py
