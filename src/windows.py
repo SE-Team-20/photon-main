@@ -1217,9 +1217,11 @@ class PlayActionWindow(QMainWindow):
 
 class RedTeamPanel(QWidget):
     def paintEvent(self, event):
+        r = self.rect()
+        if r.width() < 2 or r.height() < 2:
+            return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        r = self.rect()
 
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(*COLOR_PANEL_BG_RED)))
@@ -1227,14 +1229,14 @@ class RedTeamPanel(QWidget):
 
         painter.setBrush(Qt.BrushStyle.NoBrush)
         for pen_width, alpha in PANEL_GLOW_LAYERS:
+            inset = pen_width // 2
+            adjusted = r.adjusted(inset, inset, -inset, -inset)
+            if adjusted.width() < 1 or adjusted.height() < 1:
+                continue
             pen = QPen(QColor(*COLOR_PANEL_GLOW_RED, alpha))
             pen.setWidth(pen_width)
             painter.setPen(pen)
-            inset = pen_width // 2
-            painter.drawRoundedRect(
-                r.adjusted(inset, inset, -inset, -inset),
-                PANEL_BORDER_RADIUS, PANEL_BORDER_RADIUS
-            )
+            painter.drawRoundedRect(adjusted, PANEL_BORDER_RADIUS, PANEL_BORDER_RADIUS)
 
         cs = PANEL_CORNER_MARK_SIZE
         cr = PANEL_BORDER_RADIUS
@@ -1253,9 +1255,11 @@ class RedTeamPanel(QWidget):
 
 class GreenTeamPanel(QWidget):
     def paintEvent(self, event):
+        r = self.rect()
+        if r.width() < 2 or r.height() < 2:
+            return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        r = self.rect()
 
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(*COLOR_PANEL_BG_GREEN)))
@@ -1263,14 +1267,14 @@ class GreenTeamPanel(QWidget):
 
         painter.setBrush(Qt.BrushStyle.NoBrush)
         for pen_width, alpha in PANEL_GLOW_LAYERS:
+            inset = pen_width // 2
+            adjusted = r.adjusted(inset, inset, -inset, -inset)
+            if adjusted.width() < 1 or adjusted.height() < 1:
+                continue
             pen = QPen(QColor(*COLOR_PANEL_GLOW_GREEN, alpha))
             pen.setWidth(pen_width)
             painter.setPen(pen)
-            inset = pen_width // 2
-            painter.drawRoundedRect(
-                r.adjusted(inset, inset, -inset, -inset),
-                PANEL_BORDER_RADIUS, PANEL_BORDER_RADIUS
-            )
+            painter.drawRoundedRect(adjusted, PANEL_BORDER_RADIUS, PANEL_BORDER_RADIUS)
 
         cs = PANEL_CORNER_MARK_SIZE
         cr = PANEL_BORDER_RADIUS
