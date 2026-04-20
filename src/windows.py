@@ -262,8 +262,10 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        QTimer.singleShot(0, self.update_panel_sizes)
-        QTimer.singleShot(0, self._reposition_buttons)
+        state = self.windowState()
+        if state & (Qt.WindowState.WindowMaximized | Qt.WindowState.WindowFullScreen):
+            QTimer.singleShot(0, self.update_panel_sizes)
+            QTimer.singleShot(0, self._reposition_buttons)
 
     def create_player_grid(self, parent_layout, team_name, index_label_list):
         player_entry_grid = QGridLayout()
@@ -417,10 +419,16 @@ class MainWindow(QMainWindow):
             is_registered = self.db._is_registered()
             success = self.db._delete_player(id_text)
             if success:
+                background = RED_TEAM_BACKGROUND if team == "RED" else GREEN_TEAM_BACKGROUND
                 row_data[0].clear()
+                row_data[0].setStyleSheet(background)
                 row_data[1].clear()
-                row_data[1].setReadOnly(False)
+                row_data[1].setReadOnly(True)
                 row_data[1].setPlaceholderText("Successfully deleted player")
+                row_data[1].setStyleSheet(background)
+                row_data[2].clear()
+                row_data[2].setReadOnly(True)
+                row_data[2].setStyleSheet(background)
                 index_labels = self.red_index_labels if team=="RED" else self.green_index_labels
                 index_labels[index].setText("")
             else:
@@ -989,6 +997,9 @@ class PlayActionWindow(QMainWindow):
         self.timer.stop()
         self.flash_timer.stop()
         self.phase_glow_timer.stop()
+        for t in self._score_glow_timers.values():
+            t.stop()
+        self._score_glow_timers.clear()
         self.sound.stop()
         print(f"[closeEvent] timer_state={self.timer_state}")
         if self.timer_state == "game":
@@ -1001,6 +1012,7 @@ class PlayActionWindow(QMainWindow):
 
     def close_play_action_window(self):
         self.flash_timer.stop()
+        self.sound.stop()
         self.hit_list.clear()
         self.hide()
 
@@ -1215,17 +1227,24 @@ class PlayActionWindow(QMainWindow):
         blur = int(PHASE_GLOW_BLUR_MIN + t * (PHASE_GLOW_BLUR_MAX - PHASE_GLOW_BLUR_MIN))
         self._phase_glow_effect.setBlurRadius(blur)
 
+def _safe_rounded_rect(painter, rect, radius):
+    r = min(radius, rect.width() // 2, rect.height() // 2)
+    if r > 0:
+        painter.drawRoundedRect(rect, r, r)
+    else:
+        painter.drawRect(rect)
+
 class RedTeamPanel(QWidget):
     def paintEvent(self, event):
         r = self.rect()
-        if r.width() < 2 or r.height() < 2:
+        if r.width() < 1 or r.height() < 1:
             return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(*COLOR_PANEL_BG_RED)))
-        painter.drawRoundedRect(r, PANEL_BORDER_RADIUS, PANEL_BORDER_RADIUS)
+        _safe_rounded_rect(painter, r, PANEL_BORDER_RADIUS)
 
         painter.setBrush(Qt.BrushStyle.NoBrush)
         for pen_width, alpha in PANEL_GLOW_LAYERS:
@@ -1236,7 +1255,7 @@ class RedTeamPanel(QWidget):
             pen = QPen(QColor(*COLOR_PANEL_GLOW_RED, alpha))
             pen.setWidth(pen_width)
             painter.setPen(pen)
-            painter.drawRoundedRect(adjusted, PANEL_BORDER_RADIUS, PANEL_BORDER_RADIUS)
+            _safe_rounded_rect(painter, adjusted, PANEL_BORDER_RADIUS)
 
         cs = PANEL_CORNER_MARK_SIZE
         cr = PANEL_BORDER_RADIUS
@@ -1256,14 +1275,14 @@ class RedTeamPanel(QWidget):
 class GreenTeamPanel(QWidget):
     def paintEvent(self, event):
         r = self.rect()
-        if r.width() < 2 or r.height() < 2:
+        if r.width() < 1 or r.height() < 1:
             return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(*COLOR_PANEL_BG_GREEN)))
-        painter.drawRoundedRect(r, PANEL_BORDER_RADIUS, PANEL_BORDER_RADIUS)
+        _safe_rounded_rect(painter, r, PANEL_BORDER_RADIUS)
 
         painter.setBrush(Qt.BrushStyle.NoBrush)
         for pen_width, alpha in PANEL_GLOW_LAYERS:
@@ -1274,7 +1293,7 @@ class GreenTeamPanel(QWidget):
             pen = QPen(QColor(*COLOR_PANEL_GLOW_GREEN, alpha))
             pen.setWidth(pen_width)
             painter.setPen(pen)
-            painter.drawRoundedRect(adjusted, PANEL_BORDER_RADIUS, PANEL_BORDER_RADIUS)
+            _safe_rounded_rect(painter, adjusted, PANEL_BORDER_RADIUS)
 
         cs = PANEL_CORNER_MARK_SIZE
         cr = PANEL_BORDER_RADIUS
