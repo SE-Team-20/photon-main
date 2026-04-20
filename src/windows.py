@@ -231,6 +231,8 @@ class MainWindow(QMainWindow):
             self.green_index_labels[i].setText(f"Player #{i + 1}")
 
     def update_panel_sizes(self):
+        if not hasattr(self, 'red_panel'):
+            return
         w = self.width()
         h = self.height()
         panel_width = int(w * PANEL_WIDTH_RATIO)
@@ -239,6 +241,8 @@ class MainWindow(QMainWindow):
         self.green_panel.setFixedSize(panel_width, panel_height)
 
     def _reposition_buttons(self):
+        if not hasattr(self, 'start_game_button'):
+            return
         self.new_game_button.move(0, 0)
         self.start_game_button.move(
             int(self.width() / 2 - self.start_game_button.width() / 2), 0
