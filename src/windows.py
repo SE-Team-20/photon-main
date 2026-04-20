@@ -802,12 +802,16 @@ class PlayActionWindow(QMainWindow):
 
         self._move_restore_timer = QTimer(self)
         self._move_restore_timer.setSingleShot(True)
-        self._move_restore_timer.timeout.connect(
-            lambda: self._phase_glow_effect.setEnabled(True)
-        )
+        self._move_restore_timer.timeout.connect(self._restore_glow)
+
+    def _restore_glow(self):
+        self._phase_glow_effect.setEnabled(True)
+        if self.isVisible():
+            self.phase_glow_timer.start(PHASE_GLOW_TICK_MS)
 
     def moveEvent(self, event):
         super().moveEvent(event)
+        self.phase_glow_timer.stop()
         self._phase_glow_effect.setEnabled(False)
         self._move_restore_timer.start(200)
 

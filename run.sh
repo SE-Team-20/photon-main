@@ -10,6 +10,11 @@ if [ -d "venv" ]; then
         export LD_LIBRARY_PATH="$PYQT6_QT_LIBS:${LD_LIBRARY_PATH:-}"
     fi
 
+    # Prevent GStreamer from touching X11 display (avoids XCB race during window move + audio init)
+    export GST_GL_WINDOW=offscreen
+    # Disable MIT-SHM shared memory extension (known cause of XCB segfaults on Linux VMs)
+    export QT_XCB_NO_MITSHM=1
+
     echo "Environment activated. Launching Photon..."
     python3 main.py
 else
