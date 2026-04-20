@@ -164,6 +164,10 @@ class MainWindow(QMainWindow):
         green_shadow.setColor(QColor(*SHADOW_COLOR))
         self.green_label.setGraphicsEffect(green_shadow)
 
+        self._resize_restore_timer = QTimer(self)
+        self._resize_restore_timer.setSingleShot(True)
+        self._resize_restore_timer.timeout.connect(self._restore_effects)
+
         left_layout.addStretch(2)
         left_layout.addWidget(self.red_label, alignment=Qt.AlignmentFlag.AlignHCenter)
         left_layout.addStretch(1)
@@ -188,11 +192,11 @@ class MainWindow(QMainWindow):
         self.new_game_button.setFixedSize(ACTION_BUTTON_WIDTH, ACTION_BUTTON_HEIGHT)
         self.new_game_button.move(0, 0)
         self.new_game_button.setStyleSheet(STYLE_ACTION_BUTTON)
-        btn_shadow = QGraphicsDropShadowEffect()
-        btn_shadow.setBlurRadius(BLUR_RADIUS)
-        btn_shadow.setOffset(*DROPSHADOW_OFFSET_AMOUNT)
-        btn_shadow.setColor(QColor(*SHADOW_COLOR))
-        self.new_game_button.setGraphicsEffect(btn_shadow)
+        self._btn_shadow = QGraphicsDropShadowEffect()
+        self._btn_shadow.setBlurRadius(BLUR_RADIUS)
+        self._btn_shadow.setOffset(*DROPSHADOW_OFFSET_AMOUNT)
+        self._btn_shadow.setColor(QColor(*SHADOW_COLOR))
+        self.new_game_button.setGraphicsEffect(self._btn_shadow)
         self.new_game_button.raise_()
         self.new_game_button.clicked.connect(self.clear_all_grids)
 
@@ -206,11 +210,11 @@ class MainWindow(QMainWindow):
         window_width = self.width()
         self.start_game_button.move(int(window_width/2 - self.start_game_button.width()/2), 0)
         self.start_game_button.setStyleSheet(STYLE_ACTION_BUTTON)
-        start_shadow = QGraphicsDropShadowEffect()
-        start_shadow.setBlurRadius(BLUR_RADIUS)
-        start_shadow.setOffset(*DROPSHADOW_OFFSET_AMOUNT)
-        start_shadow.setColor(QColor(*SHADOW_COLOR))
-        self.start_game_button.setGraphicsEffect(start_shadow)
+        self._start_shadow = QGraphicsDropShadowEffect()
+        self._start_shadow.setBlurRadius(BLUR_RADIUS)
+        self._start_shadow.setOffset(*DROPSHADOW_OFFSET_AMOUNT)
+        self._start_shadow.setColor(QColor(*SHADOW_COLOR))
+        self.start_game_button.setGraphicsEffect(self._start_shadow)
         self.start_game_button.raise_()
         self.start_game_button.clicked.connect(self.show_play_action_window)
 
@@ -248,10 +252,26 @@ class MainWindow(QMainWindow):
             int(self.width() / 2 - self.start_game_button.width() / 2), 0
         )
 
+    def _restore_effects(self):
+        if not hasattr(self, 'start_game_button'):
+            return
+        for w in (self.red_label, self.green_label,
+                  self.new_game_button, self.start_game_button):
+            effect = w.graphicsEffect()
+            if effect:
+                effect.setEnabled(True)
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.update_panel_sizes()
-        self._reposition_buttons()
+        if hasattr(self, 'start_game_button'):
+            for w in (self.red_label, self.green_label,
+                      self.new_game_button, self.start_game_button):
+                effect = w.graphicsEffect()
+                if effect:
+                    effect.setEnabled(False)
+        self._resize_restore_timer.start(150)
+        QTimer.singleShot(0, self.update_panel_sizes)
+        QTimer.singleShot(0, self._reposition_buttons)
 
     def create_player_grid(self, parent_layout, team_name, index_label_list):
         player_entry_grid = QGridLayout()
@@ -785,7 +805,6 @@ class PlayActionWindow(QMainWindow):
         self.phase_label.setGraphicsEffect(self._phase_glow_effect)
         self.phase_glow_timer = QTimer()
         self.phase_glow_timer.timeout.connect(self._tick_phase_glow)
-        self.phase_glow_timer.start(PHASE_GLOW_TICK_MS)
 
     def _load_photon_logo(self):
         # Try float-logo.png first, fall back to logo.jpg
@@ -936,6 +955,7 @@ class PlayActionWindow(QMainWindow):
         self.time_display.setText(f"{minutes}:{seconds:02d}")
 
     def showEvent(self, event):
+        self.phase_glow_timer.start(PHASE_GLOW_TICK_MS)
         self.refresh_players()
         self.start_countdown()
         super().showEvent(event)
@@ -949,6 +969,7 @@ class PlayActionWindow(QMainWindow):
         self.releaseKeyboard()
         self.timer.stop()
         self.flash_timer.stop()
+        self.phase_glow_timer.stop()
         self.sound.stop()
         print(f"[closeEvent] timer_state={self.timer_state}")
         if self.timer_state == "game":
