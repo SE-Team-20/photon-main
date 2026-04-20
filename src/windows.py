@@ -112,8 +112,10 @@ class MainWindow(QMainWindow):
         window_height = screen.height() * ASPECT_RATIO
         x = (screen.width() - window_width) // 2
         y = (screen.height() - window_height) // 2
-        self.setGeometry(int(x), int(y), int(window_width), int(window_height))
-        self.setMinimumSize(int(window_width * 0.5), int(window_height * 0.5))
+        self._default_w = int(window_width)
+        self._default_h = int(window_height)
+        self.setGeometry(int(x), int(y), self._default_w, self._default_h)
+        self.setFixedSize(self._default_w, self._default_h)
 
         central_widget = QWidget()
         central_widget.setObjectName("MainWindowWidget")
@@ -163,10 +165,6 @@ class MainWindow(QMainWindow):
         green_shadow.setOffset(*DROPSHADOW_OFFSET_AMOUNT)
         green_shadow.setColor(QColor(*SHADOW_COLOR))
         self.green_label.setGraphicsEffect(green_shadow)
-
-        self._resize_restore_timer = QTimer(self)
-        self._resize_restore_timer.setSingleShot(True)
-        self._resize_restore_timer.timeout.connect(self._restore_effects)
 
         left_layout.addStretch(2)
         left_layout.addWidget(self.red_label, alignment=Qt.AlignmentFlag.AlignHCenter)
@@ -252,24 +250,18 @@ class MainWindow(QMainWindow):
             int(self.width() / 2 - self.start_game_button.width() / 2), 0
         )
 
-    def _restore_effects(self):
-        if not hasattr(self, 'start_game_button'):
-            return
-        for w in (self.red_label, self.green_label,
-                  self.new_game_button, self.start_game_button):
-            effect = w.graphicsEffect()
-            if effect:
-                effect.setEnabled(True)
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.WindowStateChange:
+            state = self.windowState()
+            if state & (Qt.WindowState.WindowMaximized | Qt.WindowState.WindowFullScreen):
+                self.setMinimumSize(0, 0)
+                self.setMaximumSize(16777215, 16777215)
+            else:
+                self.setFixedSize(self._default_w, self._default_h)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if hasattr(self, 'start_game_button'):
-            for w in (self.red_label, self.green_label,
-                      self.new_game_button, self.start_game_button):
-                effect = w.graphicsEffect()
-                if effect:
-                    effect.setEnabled(False)
-        self._resize_restore_timer.start(150)
         QTimer.singleShot(0, self.update_panel_sizes)
         QTimer.singleShot(0, self._reposition_buttons)
 
@@ -619,8 +611,10 @@ class PlayActionWindow(QMainWindow):
         window_height = screen.height() * ASPECT_RATIO
         x = (screen.width() - window_width) // 2
         y = (screen.height() - window_height) // 2
-        self.setGeometry(int(x), int(y), int(window_width), int(window_height))
-        self.setMinimumSize(int(window_width * 0.5), int(window_height * 0.5))
+        self._default_w = int(window_width)
+        self._default_h = int(window_height)
+        self.setGeometry(int(x), int(y), self._default_w, self._default_h)
+        self.setFixedSize(self._default_w, self._default_h)
 
         central_widget = QWidget()
         central_widget.setObjectName("PlayActionCentralWidget")
@@ -867,6 +861,16 @@ class PlayActionWindow(QMainWindow):
         item_h = max(1, vh // HIT_FEED_MAX_ITEMS)
         for i in range(count):
             self.hit_list.item(i).setSizeHint(QSize(0, item_h))
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.WindowStateChange:
+            state = self.windowState()
+            if state & (Qt.WindowState.WindowMaximized | Qt.WindowState.WindowFullScreen):
+                self.setMinimumSize(0, 0)
+                self.setMaximumSize(16777215, 16777215)
+            else:
+                self.setFixedSize(self._default_w, self._default_h)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
