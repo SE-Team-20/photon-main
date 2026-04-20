@@ -1,51 +1,57 @@
 #!/bin/bash
-# Photon-Main Automated Installer for Debian VM
+# Photon-Main Automated Installer for Debian 11
 
-set -e  # Stop on error
+set -e
+
+cd "$(dirname "$0")"
+
+echo "Adding contrib and non-free repos (needed for GStreamer MP3 support)..."
+sudo sed -i 's/ main$/ main contrib non-free/' /etc/apt/sources.list
 
 echo "Updating system packages..."
 sudo apt update && sudo apt upgrade -y
 
-echo "Installing essential Qt platform and audio libraries..."
+echo "Installing Python..."
+sudo apt install -y python3 python3-venv python3-pip python3-full
+
+echo "Installing Qt platform dependencies..."
 sudo apt install -y \
-    libxcb-cursor0 \
     libxcb-util1 \
     libxcb-xinerama0 \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-render-util0 \
+    libxkbcommon-x11-0 \
+    libgl1
+sudo apt install -y libxcb-cursor0 || echo "libxcb-cursor0 not available on this Debian version, skipping."
+
+echo "Installing audio and GStreamer dependencies..."
+sudo apt install -y \
     libpulse0 \
     pulseaudio \
+    libgstreamer1.0-0 \
     gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly \
-    gstreamer1.0-libav \
-    libgstreamer1.0-0 \
-    python3-pyqt6.qtmultimedia
+    gstreamer1.0-libav
 
-echo "Installing Python and venv..."
-sudo apt install -y python3 python3-venv python3-pip
-
-echo "Creating fresh virtual environment..."
-rm -rf venv  # Ensure clean slate
-python3 -m venv venv
-
-echo "Activating virtual environment and upgrading build tools..."
-source venv/bin/activate
-pip install --upgrade setuptools wheel
-
-echo "Installing system dependencies (PostgreSQL client, build tools)..."
+echo "Installing database and build dependencies..."
 sudo apt install -y build-essential libpq-dev postgresql-client
 
-echo "Installing Python packages from requirements..."
-pip install PyQt6 psycopg2-binary
+echo "Creating fresh virtual environment..."
+rm -rf venv
+python3 -m venv venv
+
+echo "Activating virtual environment and installing Python packages..."
+source venv/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install PyQt6 psycopg2-binary pygame
 
 echo "--------------------------------------------------"
 echo "Installation complete!"
 echo ""
 echo "To run the software:"
-echo "  source venv/bin/activate"
 echo "  ./run.sh"
-echo ""
-echo "Optional: to run the traffic generator for testing:"
-echo "  python3 udp_test.py"
-echo ""
 echo "--------------------------------------------------"
