@@ -113,7 +113,7 @@ class MainWindow(QMainWindow):
         x = (screen.width() - window_width) // 2
         y = (screen.height() - window_height) // 2
         self.setGeometry(int(x), int(y), int(window_width), int(window_height))
-        self.setFixedSize(int(window_width), int(window_height))
+        self.setMinimumSize(int(window_width * 0.5), int(window_height * 0.5))
 
         central_widget = QWidget()
         central_widget.setObjectName("MainWindowWidget")
@@ -238,9 +238,16 @@ class MainWindow(QMainWindow):
         self.red_panel.setFixedSize(panel_width, panel_height)
         self.green_panel.setFixedSize(panel_width, panel_height)
 
+    def _reposition_buttons(self):
+        self.new_game_button.move(0, 0)
+        self.start_game_button.move(
+            int(self.width() / 2 - self.start_game_button.width() / 2), 0
+        )
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.update_panel_sizes()
+        self._reposition_buttons()
 
     def create_player_grid(self, parent_layout, team_name, index_label_list):
         player_entry_grid = QGridLayout()
@@ -589,7 +596,7 @@ class PlayActionWindow(QMainWindow):
         x = (screen.width() - window_width) // 2
         y = (screen.height() - window_height) // 2
         self.setGeometry(int(x), int(y), int(window_width), int(window_height))
-        self.setFixedSize(int(window_width), int(window_height))
+        self.setMinimumSize(int(window_width * 0.5), int(window_height * 0.5))
 
         central_widget = QWidget()
         central_widget.setObjectName("PlayActionCentralWidget")
