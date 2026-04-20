@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QListWidget, QListWidgetItem, QSizePolicy, QApplication
 )
 from udp_server import UDPServer
-from PyQt6.QtGui import QGuiApplication, QPainter, QPen, QBrush, QColor, QFont, QPixmap, QImage
+from PyQt6.QtGui import QGuiApplication, QPainter, QPen, QBrush, QColor, QFont, QPixmap, QImage, QPainterPath
 from PyQt6.QtCore import Qt, QTimer, QEvent, pyqtSignal, QSize, QPoint
 from util import isDevMode
 from constants import *
@@ -1229,10 +1229,14 @@ class PlayActionWindow(QMainWindow):
 
 def _safe_rounded_rect(painter, rect, radius):
     r = min(radius, rect.width() // 2, rect.height() // 2)
+    path = QPainterPath()
     if r > 0:
-        painter.drawRoundedRect(rect, r, r)
+        path.addRoundedRect(float(rect.x()), float(rect.y()),
+                            float(rect.width()), float(rect.height()), float(r), float(r))
     else:
-        painter.drawRect(rect)
+        path.addRect(float(rect.x()), float(rect.y()),
+                     float(rect.width()), float(rect.height()))
+    painter.drawPath(path)
 
 class RedTeamPanel(QWidget):
     def paintEvent(self, event):
