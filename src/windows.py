@@ -800,6 +800,17 @@ class PlayActionWindow(QMainWindow):
         self.phase_glow_timer = QTimer()
         self.phase_glow_timer.timeout.connect(self._tick_phase_glow)
 
+        self._move_restore_timer = QTimer(self)
+        self._move_restore_timer.setSingleShot(True)
+        self._move_restore_timer.timeout.connect(
+            lambda: self._phase_glow_effect.setEnabled(True)
+        )
+
+    def moveEvent(self, event):
+        super().moveEvent(event)
+        self._phase_glow_effect.setEnabled(False)
+        self._move_restore_timer.start(200)
+
     def _load_photon_logo(self):
         # Try float-logo.png first, fall back to logo.jpg
         logo_path = IMAGES_DIR / "float-logo.png"
