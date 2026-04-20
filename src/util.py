@@ -20,5 +20,5 @@ def readConfig(filename, section):
 import os
 
 def isDevMode():
-  return os.getenv("APP_MODE")=="DEV" # <- NORMAL MODE UNCOMMENT
-  #return True  # <- DEV MODE UNCOMMENT
+  #return os.getenv("APP_MODE")=="DEV" # <- NORMAL MODE UNCOMMENT
+  return True  # <- DEV MODE UNCOMMENT

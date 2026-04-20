@@ -77,11 +77,17 @@ PENALTY_TAKEDOWN = -10
 
 BASE_EQUIP_ID = 100
 
-DEV_CODENAMES = [
-    "Oscar", "Ray", "Tan", "Sage", "Baker",
-    "Foxtrot", "Bravo", "Kilo", "Nova", "Atlas",
-    "Zulu", "Echo", "Ghost", "Reaper", "Maverick",
+DEV_CODENAMES_RED = [
+    "Viper", "Cobra", "Blaze", "Inferno", "Ember",
+    "Scorch", "Crimson", "Fury", "Havoc", "Reaper",
+    "Torch", "Flame", "Magma", "Cinder", "Ash",
 ]
+DEV_CODENAMES_GREEN = [
+    "Ghost", "Cipher", "Frost", "Storm", "Titan",
+    "Echo", "Wraith", "Nova", "Specter", "Atlas",
+    "Phantom", "Shadow", "Mirage", "Rogue", "Stealth",
+]
+DEV_CODENAMES = DEV_CODENAMES_RED
 DEV_RED_EQUIP_IDS  = [1,  3,  5,  7,  9,  11, 13, 15, 17, 19, 21, 23, 25, 27, 29]
 DEV_GREEN_EQUIP_IDS = [2,  4,  6,  8,  10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
 
@@ -378,6 +384,6 @@ TIMER_INTERVAL_MS = 1000
 MUSIC_START_THRESHOLD = 16
 COUNTDOWN_READY_SECONDS = 30
 GAME_DURATION_SECONDS = 360
-DEV_GAME_DURATION_SECONDS = 5
+DEV_GAME_DURATION_SECONDS = 360
 
 APP_NAME = "Photon Main"

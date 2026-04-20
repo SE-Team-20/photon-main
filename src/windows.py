@@ -217,14 +217,14 @@ class MainWindow(QMainWindow):
     def _populate_dev_entries(self):
         for i, (row, equip) in enumerate(zip(self.red_entries, DEV_RED_EQUIP_IDS)):
             row[0].setText(str(i + 1))
-            row[1].setText(DEV_CODENAMES[i])
+            row[1].setText(DEV_CODENAMES_RED[i])
             row[1].setReadOnly(False)
             row[2].setText(str(equip))
             row[2].setReadOnly(False)
             self.red_index_labels[i].setText(f"Player #{i + 1}")
         for i, (row, equip) in enumerate(zip(self.green_entries, DEV_GREEN_EQUIP_IDS)):
             row[0].setText(str(i + 16))
-            row[1].setText(DEV_CODENAMES[i])
+            row[1].setText(DEV_CODENAMES_GREEN[i])
             row[1].setReadOnly(False)
             row[2].setText(str(equip))
             row[2].setReadOnly(False)
@@ -800,6 +800,7 @@ class PlayActionWindow(QMainWindow):
         while self.hit_list.count() > HIT_FEED_MAX_ITEMS:
             self.hit_list.takeItem(0)
         self._resize_hit_items()
+        self.hit_list.setCurrentRow(self.hit_list.count() - 1)
         self.hit_list.scrollToBottom()
 
     def start_countdown(self):
@@ -807,7 +808,7 @@ class PlayActionWindow(QMainWindow):
         self.phase_label.setText("Players get ready!")
         self._set_phase_style(STYLE_PHASE_LABEL_WHITE, PHASE_GLOW_COLOR_WHITE)
         self.end_hint_label.setVisible(False)
-        self.remaining_seconds = 0 if isDevMode() else COUNTDOWN_READY_SECONDS
+        self.remaining_seconds = COUNTDOWN_READY_SECONDS
         self.start_track_played = False
         self.update_timer_display()
         self.timer.start(TIMER_INTERVAL_MS)
