@@ -857,7 +857,7 @@ class PlayActionWindow(QMainWindow):
         self.phase_label.setText("Players get ready!")
         self._set_phase_style(STYLE_PHASE_LABEL_WHITE, PHASE_GLOW_COLOR_WHITE)
         self.end_hint_label.setVisible(False)
-        self.remaining_seconds = COUNTDOWN_READY_SECONDS
+        self.remaining_seconds = DEV_COUNTDOWN_READY_SECONDS if isDevMode() else COUNTDOWN_READY_SECONDS
         self.start_track_played = False
         self.update_timer_display()
         self.timer.start(TIMER_INTERVAL_MS)
@@ -938,8 +938,11 @@ class PlayActionWindow(QMainWindow):
         self.timer.stop()
         self.flash_timer.stop()
         self.sound.stop()
+        print(f"[closeEvent] timer_state={self.timer_state}")
+        if self.timer_state == "game":
+            self.udp.announce_game_end()
         self.hit_list.clear()
-        if self.timer_state == "game_over":
+        if self.timer_state in ("game_over", "game"):
             self.main_window.show()
             self.main_window.raise_()
         super().closeEvent(event)
