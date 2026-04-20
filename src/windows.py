@@ -368,6 +368,7 @@ class MainWindow(QMainWindow):
             row_data[0].clear()
             return
 
+        row_data[0].setStyleSheet(background)
         index_labels[index].setText(f"Player #{index+1}")
         codename = False if isDevMode() else self.db._query_codename(id_val)
 
