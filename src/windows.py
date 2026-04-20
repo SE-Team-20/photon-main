@@ -298,6 +298,26 @@ class MainWindow(QMainWindow):
         parent_layout.addLayout(player_entry_grid)
         return entries
 
+    def _all_entered_player_ids(self, exclude_row_data=None):
+        ids = set()
+        for row in self.red_entries + self.green_entries:
+            if row is exclude_row_data:
+                continue
+            txt = row[0].text().strip()
+            if txt:
+                ids.add(txt)
+        return ids
+
+    def _all_entered_equipment_ids(self, exclude_row_data=None):
+        ids = set()
+        for row in self.red_entries + self.green_entries:
+            if row is exclude_row_data:
+                continue
+            txt = row[2].text().strip()
+            if txt:
+                ids.add(txt)
+        return ids
+
     def get_red_team_data(self):
         red_team_data = []
         for row in self.red_entries:
@@ -335,6 +355,17 @@ class MainWindow(QMainWindow):
             id_val = int(id_text)
         except ValueError:
             print(f"Error: id must be integer: {id_text}")
+            return
+
+        if id_text in self._all_entered_player_ids(exclude_row_data=row_data):
+            msg = QMessageBox(self)
+            msg.setStyleSheet(COOL_FONT)
+            msg.setWindowTitle("Uh oh...")
+            msg.setText("This player ID is already in the game. Each player can only appear once.")
+            msg.setIcon(QMessageBox.Icon.Information)
+            msg.exec()
+            row_data[0].setStyleSheet(f"{background}; border: 1px solid red;")
+            row_data[0].clear()
             return
 
         index_labels[index].setText(f"Player #{index+1}")
@@ -464,8 +495,26 @@ class MainWindow(QMainWindow):
             return
 
         if (team == "RED" and equip_id % 2 == 0) or (team == "GREEN" and equip_id % 2 == 1):
-            print("Error: wrong equipment ID parity for the team color")
             row_data[2].setStyleSheet(f"{background}; border: 1px solid red;")
+            msg = QMessageBox(self)
+            msg.setStyleSheet(COOL_FONT)
+            msg.setWindowTitle("Uh oh...")
+            if team == "RED":
+                msg.setText("Red team must have odd numbered equipment.")
+            else:
+                msg.setText("Green team must have even numbered equipment.")
+            msg.setIcon(QMessageBox.Icon.Information)
+            msg.exec()
+            return
+
+        if equip_text in self._all_entered_equipment_ids(exclude_row_data=row_data):
+            row_data[2].setStyleSheet(f"{background}; border: 1px solid red;")
+            msg = QMessageBox(self)
+            msg.setStyleSheet(COOL_FONT)
+            msg.setWindowTitle("Uh oh...")
+            msg.setText("This equipment ID is already assigned to another player.")
+            msg.setIcon(QMessageBox.Icon.Information)
+            msg.exec()
             return
 
         if not id_text or not equip_text:
