@@ -30,6 +30,41 @@ def _team_glow() -> QGraphicsDropShadowEffect:
     fx.setColor(QColor(*TEAM_LABEL_GLOW_COLOR))
     return fx
 
+class HintOverlay(QLabel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setStyleSheet(
+            "background-color: rgba(0,0,0,170);"
+            "color: white;"
+            "font-family: 'Audiowide', sans-serif;"
+            "font-size: 13px;"
+            "padding: 8px 18px;"
+            "border-radius: 8px;"
+        )
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._timer = QTimer(self)
+        self._timer.setSingleShot(True)
+        self._timer.timeout.connect(self.hide)
+        self.hide()
+
+    def show_hint(self, text):
+        self._timer.stop()
+        self.setText(text)
+        self.adjustSize()
+        self.reposition()
+        self.show()
+        self.raise_()
+        self._timer.start(3000)
+
+    def reposition(self):
+        p = self.parent()
+        if p is None:
+            return
+        self.adjustSize()
+        self.move((p.width() - self.width()) // 2, p.height() - self.height() - 24)
+
+
 class UDPConfigWindow(QWidget):
     def __init__(self, window_size):
         super().__init__()
@@ -115,7 +150,7 @@ class MainWindow(QMainWindow):
         self._default_w = int(window_width)
         self._default_h = int(window_height)
         self.setGeometry(int(x), int(y), self._default_w, self._default_h)
-        self.setFixedSize(self._default_w, self._default_h)
+        self.setMinimumSize(480, 320)
 
         central_widget = QWidget()
         central_widget.setObjectName("MainWindowWidget")
@@ -126,6 +161,7 @@ class MainWindow(QMainWindow):
             }}
         """)
         self.setCentralWidget(central_widget)
+        self._hint = HintOverlay(self.centralWidget())
 
         team_layout = QHBoxLayout(central_widget)
         team_layout.setContentsMargins(0, 0, 0, 0)
@@ -250,15 +286,9 @@ class MainWindow(QMainWindow):
             int(self.width() / 2 - self.start_game_button.width() / 2), 0
         )
 
-    def changeEvent(self, event):
-        super().changeEvent(event)
-        if event.type() == QEvent.Type.WindowStateChange:
-            state = self.windowState()
-            if state & (Qt.WindowState.WindowMaximized | Qt.WindowState.WindowFullScreen):
-                self.setMinimumSize(0, 0)
-                self.setMaximumSize(16777215, 16777215)
-            else:
-                self.setFixedSize(self._default_w, self._default_h)
+    def showEvent(self, event):
+        super().showEvent(event)
+        QTimer.singleShot(800, lambda: self._hint.show_hint("Press F11 for Fullscreen"))
 
     def moveEvent(self, event):
         super().moveEvent(event)
@@ -267,10 +297,9 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        state = self.windowState()
-        if state & (Qt.WindowState.WindowMaximized | Qt.WindowState.WindowFullScreen):
-            QTimer.singleShot(0, self.update_panel_sizes)
-            QTimer.singleShot(0, self._reposition_buttons)
+        QTimer.singleShot(0, self.update_panel_sizes)
+        QTimer.singleShot(0, self._reposition_buttons)
+        self._hint.reposition()
 
     def create_player_grid(self, parent_layout, team_name, index_label_list):
         player_entry_grid = QGridLayout()
@@ -596,7 +625,16 @@ class MainWindow(QMainWindow):
                     entry.setPlaceholderText("")
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_F12:
+        if event.key() == Qt.Key.Key_F11:
+            if self.windowState() & Qt.WindowState.WindowFullScreen:
+                self.showNormal()
+            else:
+                self.showFullScreen()
+                QTimer.singleShot(400, lambda: self._hint.show_hint("Press Esc to exit Fullscreen"))
+        elif event.key() == Qt.Key.Key_Escape:
+            if self.windowState() & Qt.WindowState.WindowFullScreen:
+                self.showNormal()
+        elif event.key() == Qt.Key.Key_F12:
             self.clear_all_grids()
         elif event.key() == Qt.Key.Key_F5:
             self.play_action_window.show()
@@ -627,7 +665,7 @@ class PlayActionWindow(QMainWindow):
         self._default_w = int(window_width)
         self._default_h = int(window_height)
         self.setGeometry(int(x), int(y), self._default_w, self._default_h)
-        self.setFixedSize(self._default_w, self._default_h)
+        self.setMinimumSize(480, 320)
 
         central_widget = QWidget()
         central_widget.setObjectName("PlayActionCentralWidget")
@@ -638,6 +676,7 @@ class PlayActionWindow(QMainWindow):
             }}
         """)
         self.setCentralWidget(central_widget)
+        self._hint = HintOverlay(self.centralWidget())
 
         main_layout = QHBoxLayout(central_widget)
         main_layout.setContentsMargins(20, 20, 20, 20)
@@ -894,20 +933,11 @@ class PlayActionWindow(QMainWindow):
         for i in range(count):
             self.hit_list.item(i).setSizeHint(QSize(0, item_h))
 
-    def changeEvent(self, event):
-        super().changeEvent(event)
-        if event.type() == QEvent.Type.WindowStateChange:
-            state = self.windowState()
-            if state & (Qt.WindowState.WindowMaximized | Qt.WindowState.WindowFullScreen):
-                self.setMinimumSize(0, 0)
-                self.setMaximumSize(16777215, 16777215)
-            else:
-                self.setFixedSize(self._default_w, self._default_h)
-
     def resizeEvent(self, event):
         super().resizeEvent(event)
         QTimer.singleShot(0, self._reposition_logo)
         QTimer.singleShot(0, self._resize_hit_items)
+        self._hint.reposition()
 
     def add_hit(self, text):
         item = QListWidgetItem(text)
@@ -980,7 +1010,6 @@ class PlayActionWindow(QMainWindow):
                 self.time_display.setText("0:00")
                 self.end_hint_label.setVisible(True)
                 self.udp.announce_game_end()
-                self.sound.stop()
                 self.grabKeyboard()
             else:
                 self.timer.stop()
@@ -995,8 +1024,20 @@ class PlayActionWindow(QMainWindow):
         self.refresh_players()
         self.start_countdown()
         super().showEvent(event)
+        QTimer.singleShot(800, lambda: self._hint.show_hint("Press F11 for Fullscreen"))
 
     def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_F11:
+            if self.windowState() & Qt.WindowState.WindowFullScreen:
+                self.showNormal()
+            else:
+                self.showFullScreen()
+                QTimer.singleShot(400, lambda: self._hint.show_hint("Press Esc to exit Fullscreen"))
+            return
+        if event.key() == Qt.Key.Key_Escape:
+            if self.windowState() & Qt.WindowState.WindowFullScreen:
+                self.showNormal()
+                return
         if self.timer_state == "game_over":
             self.releaseKeyboard()
             self.close()
