@@ -886,6 +886,7 @@ class PlayActionWindow(QMainWindow):
 
     def closeEvent(self, event):
         self.releaseKeyboard()
+        self.timer.stop()
         self.flash_timer.stop()
         self.sound.stop()
         self.hit_list.clear()
