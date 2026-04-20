@@ -75,12 +75,12 @@ chmod +x macinstall.sh run.sh
 
 ## TODOs (Sprint 4)
 by April 19th
-- [ ] implement UDP server logic, run game using traffic_generator.py (Ali)
-- [ ] update score in scoreboard on socket recvfrom() (Thomas)
-- [ ] add base icon to player hitting base in scoreboard (Ryoji)
-- [ ] implement friendly fire logic (Ryoji)
-- [ ] add random music throughout game action (Wahid)
-- [ ] clean up UI and debug existing minor faults (Thomas and Ryoji)
+- [x] implement UDP server logic, run game using traffic_generator.py (Ali)
+- [x] update score in scoreboard on socket recvfrom() (Thomas)
+- [x] add base icon to player hitting base in scoreboard (Ryoji)
+- [x] implement friendly fire logic (Ryoji)
+- [x] add random music throughout game action (Wahid)
+- [x] clean up UI and debug existing minor faults (Thomas and Ryoji)
 
 
 
