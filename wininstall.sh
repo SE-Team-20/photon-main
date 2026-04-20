@@ -47,7 +47,7 @@ python3 -m venv venv
 echo "Activating virtual environment and installing Python packages..."
 source venv/bin/activate
 pip install --upgrade pip setuptools wheel
-pip install "PyQt6==6.6.1" psycopg2-binary pygame
+pip install "PyQt6==6.6.1" "PyQt6-Qt6==6.6.2" "PyQt6-sip>=13.6,<14" psycopg2-binary pygame
 
 echo "--------------------------------------------------"
 echo "Installation complete!"
