@@ -825,6 +825,10 @@ class PlayActionWindow(QMainWindow):
     def moveEvent(self, event):
         super().moveEvent(event)
         self.phase_glow_timer.stop()
+        for t, c in list(self._score_glow_timers.values()):
+            c[0] = True
+            t.stop()
+        self._score_glow_timers.clear()
         self.setUpdatesEnabled(False)
         self._move_restore_timer.start(200)
 
@@ -1002,7 +1006,8 @@ class PlayActionWindow(QMainWindow):
         self.timer.stop()
         self.flash_timer.stop()
         self.phase_glow_timer.stop()
-        for t in self._score_glow_timers.values():
+        for t, c in self._score_glow_timers.values():
+            c[0] = True
             t.stop()
         self._score_glow_timers.clear()
         self.sound.stop()
@@ -1022,7 +1027,8 @@ class PlayActionWindow(QMainWindow):
         self.hide()
 
     def refresh_players(self):
-        for t in self._score_glow_timers.values():
+        for t, c in self._score_glow_timers.values():
+            c[0] = True
             t.stop()
         self._score_glow_timers.clear()
         self._clear_grid(self.red_grid)
@@ -1136,7 +1142,9 @@ class PlayActionWindow(QMainWindow):
 
     def _start_score_glow(self, equip_id):
         if equip_id in self._score_glow_timers:
-            self._score_glow_timers.pop(equip_id).stop()
+            old_timer, old_cancelled = self._score_glow_timers.pop(equip_id)
+            old_cancelled[0] = True
+            old_timer.stop()
         if equip_id not in self.score_labels:
             return
         _, label = self.score_labels[equip_id]
@@ -1151,8 +1159,11 @@ class PlayActionWindow(QMainWindow):
         cycle_len = max(1, ticks_total // SCORE_GLOW_CYCLES)
         half_cycle = max(1, cycle_len // 2)
         tick = [0]
+        cancelled = [False]
 
         def _tick():
+            if cancelled[0]:
+                return
             tick[0] += 1
             if tick[0] >= ticks_total:
                 timer.stop()
@@ -1166,7 +1177,7 @@ class PlayActionWindow(QMainWindow):
         timer = QTimer()
         timer.timeout.connect(_tick)
         timer.start(SCORE_GLOW_TICK_MS)
-        self._score_glow_timers[equip_id] = timer
+        self._score_glow_timers[equip_id] = (timer, cancelled)
 
     def reflect_score_change(self, equip_id, diff):
         if equip_id not in self.score_labels:
@@ -1224,6 +1235,8 @@ class PlayActionWindow(QMainWindow):
         self.green_team_score_label.setStyleSheet(green_style)
 
     def _tick_phase_glow(self):
+        if not self.updatesEnabled() or not self.isVisible():
+            return
         cycle_ticks = max(1, PHASE_GLOW_CYCLE_MS // PHASE_GLOW_TICK_MS)
         self._phase_glow_tick = (self._phase_glow_tick + 1) % cycle_ticks
         half = max(1, cycle_ticks // 2)
