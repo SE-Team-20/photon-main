@@ -260,6 +260,11 @@ class MainWindow(QMainWindow):
             else:
                 self.setFixedSize(self._default_w, self._default_h)
 
+    def moveEvent(self, event):
+        super().moveEvent(event)
+        self.setUpdatesEnabled(False)
+        QTimer.singleShot(200, lambda: self.setUpdatesEnabled(True))
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         state = self.windowState()
@@ -812,21 +817,15 @@ class PlayActionWindow(QMainWindow):
         self._move_restore_timer.setSingleShot(True)
         self._move_restore_timer.timeout.connect(self._restore_glow)
 
-    def _set_all_effects_enabled(self, enabled):
-        for widget in self.findChildren(QWidget):
-            effect = widget.graphicsEffect()
-            if effect:
-                effect.setEnabled(enabled)
-
     def _restore_glow(self):
-        self._set_all_effects_enabled(True)
+        self.setUpdatesEnabled(True)
         if self.isVisible():
             self.phase_glow_timer.start(PHASE_GLOW_TICK_MS)
 
     def moveEvent(self, event):
         super().moveEvent(event)
         self.phase_glow_timer.stop()
-        self._set_all_effects_enabled(False)
+        self.setUpdatesEnabled(False)
         self._move_restore_timer.start(200)
 
     def _load_photon_logo(self):
